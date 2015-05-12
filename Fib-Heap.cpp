@@ -1,4 +1,15 @@
 
+#include <iomanip>
+#include <iostream>
+
+#include <string.h>
+#include <time.h>
+#include <cmath>
+
+#include <algorithm>
+
+using namespace std;
+
 /*
  * Node Declaration
  */

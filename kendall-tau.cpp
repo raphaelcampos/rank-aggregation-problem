@@ -11,10 +11,12 @@
 #include <queue>
 #include <vector>
 #include <map>
-#include <unordered_map>
+
+#include "IGraph.h"
+#include "Graph_Adj_Matrix2.hpp"
+#include "Graph_Hamilton_Path.cpp"
 
 using namespace std;
-
 
 
 void print_array(int a[], int n){
@@ -235,7 +237,7 @@ char* union_all(map<char, int> ranks[], int n, int &size){
 	return c;
 }
 
-void DFS(int i, int **G, int *visited, int n)
+/*void DFS(int i, int **G, int *visited, int n)
 {
     int j;
     printf("\n%C", 'A' + i);
@@ -243,7 +245,7 @@ void DFS(int i, int **G, int *visited, int n)
     for(j=0;j<n;j++)
         if(!visited[j]&&G[i][j]==1)
             DFS(j, G, visited, n);
-}
+}*/
 
 class GreaterOutDegree
 {
@@ -257,6 +259,57 @@ class GreaterOutDegree
 		    else return (lhs.first<rhs.first);
 		  }
 };
+
+Graph_Adj_Matrix<int> * create_majority_graph(char * ranks[], int rs, int k, int cl){
+
+	Graph_Adj_Matrix<int> *g = new Graph_Adj_Matrix<int>(cl);
+
+	for (int i = 0; i < rs; ++i)
+	{
+		for (int j = 0; j < k; ++j)
+		{
+			for (int l = j + 1; l < k; ++l)
+			{	
+				int u = (int)ranks[i][j] - ((int)'A');		
+				int v = (int)ranks[i][l] - ((int)'A');
+
+				g->addEdge(u, v,  g->getEdge(u, v) + 1);
+				
+			}
+		}
+	}
+
+	Graph_Adj_Matrix<int>::vertex_iterator it = g->begin();
+
+	for (int i = 0; i < cl; ++i)
+	{
+		cout << it->adj[i].first << " ";
+	}
+	cout << endl;
+
+	it++;
+	cout << "outdegree : " << it->outdegree << endl;
+	cout << "indegree : " << it->indegree << endl;
+
+	for (int i = 0; i < cl; ++i)
+	{
+		cout << it->adj[i].first << " ";
+	}
+
+	cout << endl;
+
+	it = g->end();	
+
+	for (int i = 0; i < cl; ++i)
+	{
+		cout << it->adj[i].first << " ";
+	}
+
+	cout << endl;
+
+	cout << "Size : " << (int)g->isComplete() << endl;
+	return g;
+}
 
 pair<int, int> * create_majority_graph(int **G, char **ranks, int rs, int k, int n){
 
@@ -280,6 +333,16 @@ pair<int, int> * create_majority_graph(int **G, char **ranks, int rs, int k, int
 				G[u][v] += 1;
 			}
 		}
+	}
+
+	for (int i = 0; i < n; ++i)
+	{
+		for (int j = 0; j < n; ++j)
+		{
+			cout << setw(5) << G[i][j] << " ";	
+		}
+
+		cout << endl;
 	}
 
 	for (int u = 0; u < n; ++u)
@@ -363,9 +426,10 @@ char * hamiltonian_path_tournament(int **G, pair<int, int> *outdegree, int n){
 
 int main(int argc, char const *argv[])
 {
+
 	srand(time(NULL));
 	
-	int count = 10000;
+	int count = 10;
 	int k = 6; // top-k rank
 	map<char, int> *ranks = new map<char, int>[count];
 	char **ranks_arr = new char*[count];
@@ -429,6 +493,9 @@ int main(int argc, char const *argv[])
 	}
 
 	pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
+	IGraph<int> * graph = create_majority_graph(ranks_arr, count, k, cl);
+	
+
 	char * rh = hamiltonian_path_tournament(G, outdegree, cl);
 	print_array(rh, cl);
 	map<char, int> rank_heu = rank_from_array( rh, cl);
@@ -445,6 +512,8 @@ int main(int argc, char const *argv[])
 
 		cout << endl;
 	}
+
+	((Graph_Adj_Matrix<int>*)graph)->printAsMatrix();
 
 	return 0;
 }
