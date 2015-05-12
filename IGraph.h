@@ -11,26 +11,20 @@ class IGraph {
     public:
         class vertex_iterator_imp{
             public:
-                virtual void next(){
-                    cout << "sdasd" << endl;
-                }
-                 vertex_iterator_imp* clone() const;
-                virtual IGraph::vertex * get() const{
-                    cout << "get" << endl;
-                }
-                 bool isEqual(const vertex_iterator_imp& other) const;
+                virtual void next() = 0;
+                virtual vertex_iterator_imp* clone() = 0;
+                virtual IGraph::vertex * get() const = 0;
+                virtual bool isEqual(const vertex_iterator_imp& other) const = 0;
         };
 
     public:
         class vertex
         {
-            friend IGraph;
-
             protected:
                 class iterator_imp{
                     public:
                          void next();
-                         iterator_imp* clone() const;
+                         iterator_imp* clone();
                          ve * get() const;
                          bool isEqual(const iterator_imp& other) const;
                 };

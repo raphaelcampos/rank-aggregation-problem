@@ -15,7 +15,7 @@ class Graph_Adj_Matrix : public IGraph {
     public:
         class vertex : public IGraph::vertex
         {
-            friend Graph_Adj_Matrix;
+            //friend Graph_Adj_Matrix;
             typedef pair<double, IGraph::vertex*> ve;
 
             protected:
@@ -30,6 +30,7 @@ class Graph_Adj_Matrix : public IGraph {
                         }
                         
                         IGraph::ve * get(){
+
                             IGraph::ve * v = &(*ptr_)[pos];
 
                             return v;
@@ -70,13 +71,13 @@ class Graph_Adj_Matrix : public IGraph {
 
                 IGraph::vertex::iterator begin(){ 
                     iterator_imp * first = new iterator_imp(&this->adj, this->adj.size()-1);
-                    typename IGraph::vertex::iterator f(first);
+                    IGraph::vertex::iterator f(first);
                     return f;
                 }
 
                 IGraph::vertex::iterator end(){
                     iterator_imp * last = new iterator_imp(&this->adj, this->adj.size()-1);
-                    typename IGraph::vertex::iterator l(last);
+                    IGraph::vertex::iterator l(last);
                     return l;
                 }
 
@@ -108,9 +109,9 @@ class Graph_Adj_Matrix : public IGraph {
         int numVertices();
         void printAsMatrix();
 
-        typename IGraph::vertex_iterator begin();
+        IGraph::vertex_iterator begin();
 
-        typename IGraph::vertex_iterator end();
+        IGraph::vertex_iterator end();
 
         Graph_Adj_Matrix & operator=(const Graph_Adj_Matrix&);
 
@@ -126,12 +127,11 @@ class Graph_Adj_Matrix : public IGraph {
                     return this;
                 }
                 
-                IGraph::vertex * get(){
-                    cout << "filho get" << endl;
+                IGraph::vertex * get() const{
                     return &(*ptr_)[pos];
                 }
 
-                bool isEqual(const IGraph::vertex_iterator_imp& other){
+                bool isEqual(const IGraph::vertex_iterator_imp& other) const{
                     return get() == other.get();
                 }
 
@@ -274,7 +274,7 @@ IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
 
 IGraph::vertex_iterator  Graph_Adj_Matrix::end(){
 
-    Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(&this->vertices, this->vertices.size()-1);
+    vertex_iterator_imp * last = new vertex_iterator_imp(&this->vertices, this->vertices.size()-1);
 
     IGraph::vertex_iterator l(last);
 
