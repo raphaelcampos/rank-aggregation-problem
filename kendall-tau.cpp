@@ -14,7 +14,7 @@
 
 #include "IGraph.h"
 #include "Graph_Adj_Matrix2.hpp"
-#include "Graph_Hamilton_Path.cpp"
+//#include "Graph_Hamilton_Path.cpp"
 
 using namespace std;
 
@@ -260,9 +260,9 @@ class GreaterOutDegree
 		  }
 };
 
-Graph_Adj_Matrix<int> * create_majority_graph(char * ranks[], int rs, int k, int cl){
+Graph_Adj_Matrix * create_majority_graph(char * ranks[], int rs, int k, int cl){
 
-	Graph_Adj_Matrix<int> *g = new Graph_Adj_Matrix<int>(cl);
+	Graph_Adj_Matrix *g = new Graph_Adj_Matrix(cl);
 
 	for (int i = 0; i < rs; ++i)
 	{
@@ -270,7 +270,7 @@ Graph_Adj_Matrix<int> * create_majority_graph(char * ranks[], int rs, int k, int
 		{
 			for (int l = j + 1; l < k; ++l)
 			{	
-				int u = (int)ranks[i][j] - ((int)'A');		
+				int u = (int)ranks[i][j] - ((int)'A');
 				int v = (int)ranks[i][l] - ((int)'A');
 
 				g->addEdge(u, v,  g->getEdge(u, v) + 1);
@@ -279,19 +279,19 @@ Graph_Adj_Matrix<int> * create_majority_graph(char * ranks[], int rs, int k, int
 		}
 	}
 
-	Graph_Adj_Matrix<int>::vertex_iterator it = g->begin();
+	IGraph::vertex_iterator it = g->begin();
 
-	for (int i = 0; i < cl; ++i)
+	/*for (int i = 0; i < cl; ++i)
 	{
-		cout << it->adj[i].first << " ";
-	}
-	cout << endl;
+		cout << adj[i].first << " ";
+	}*/
+	//cout << " sddsd " << it->outdegree << endl;
 
-	it++;
-	cout << "outdegree : " << it->outdegree << endl;
-	cout << "indegree : " << it->indegree << endl;
+	//it++;
+	//cout << "outdegree : " << it->outdegree << endl;
+	//cout << "indegree : " << it->indegree << endl;
 
-	for (int i = 0; i < cl; ++i)
+	/*for (int i = 0; i < cl; ++i)
 	{
 		cout << it->adj[i].first << " ";
 	}
@@ -303,7 +303,7 @@ Graph_Adj_Matrix<int> * create_majority_graph(char * ranks[], int rs, int k, int
 	for (int i = 0; i < cl; ++i)
 	{
 		cout << it->adj[i].first << " ";
-	}
+	}*/
 
 	cout << endl;
 
@@ -493,7 +493,7 @@ int main(int argc, char const *argv[])
 	}
 
 	pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
-	IGraph<int> * graph = create_majority_graph(ranks_arr, count, k, cl);
+	IGraph * graph = create_majority_graph(ranks_arr, count, k, cl);
 	
 
 	char * rh = hamiltonian_path_tournament(G, outdegree, cl);
@@ -513,7 +513,7 @@ int main(int argc, char const *argv[])
 		cout << endl;
 	}
 
-	((Graph_Adj_Matrix<int>*)graph)->printAsMatrix();
+	((Graph_Adj_Matrix*)graph)->printAsMatrix();
 
 	return 0;
 }

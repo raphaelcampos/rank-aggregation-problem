@@ -11,72 +11,81 @@
 
 using namespace std;
 
-template<class T>
-class Graph_Adj_Matrix;
-
-template<class U>
-class vertex
-{
-    friend Graph_Adj_Matrix<U>;
-    typedef pair<U, vertex*> ve;
-
+class Graph_Adj_Matrix : public IGraph { 
     public:
-        class iterator
+        class vertex : public IGraph::vertex
         {
+            friend Graph_Adj_Matrix;
+            typedef pair<double, IGraph::vertex*> ve;
+
+            protected:
+                class iterator_imp : public IGraph::vertex::iterator_imp{
+                    public:
+                        void next(){
+                            pos++;
+                        }
+                        
+                        IGraph::vertex::iterator_imp* clone(){
+                            return this;
+                        }
+                        
+                        IGraph::ve * get(){
+                            IGraph::ve * v = &(*ptr_)[pos];
+
+                            return v;
+                        }
+
+                        bool isEqual(const IGraph::vertex::iterator_imp& other){
+                            return get() == other.get();
+                        }
+
+                        iterator_imp(vector< Graph_Adj_Matrix::vertex::ve >  * ptr, int pos = 0){
+                            ptr_ = ptr;
+                            this->pos = pos;
+                        }
+
+                    private:
+                        int pos;
+                        vector< Graph_Adj_Matrix::vertex::ve > * ptr_;
+                };
+
+
             public:
-                typedef iterator self_type;
-                typedef ve value_type;
-                typedef ve& reference;
-                typedef ve* pointer;
-                typedef std::forward_iterator_tag iterator_category;
-                typedef int difference_type;
-                iterator(pointer ptr) : ptr_(ptr) { }
-                self_type operator++() { self_type i = *this; ptr_++; return i; }
-                self_type operator++(int junk) { ptr_++; return *this; }
-                reference operator*() { return ptr_->vertices[pos]; }
-                pointer operator->() { return &(ptr_->vertices[pos]); }
-                bool operator==(const self_type& rhs) { return ptr_ == rhs.ptr_; }
-                bool operator!=(const self_type& rhs) { return ptr_ != rhs.ptr_; }
-            private:
-                pointer ptr_;
-                int pos;
-        };
-        vertex(){
-            indegree = 0;
-            outdegree = 0;
-        }
+                vertex(){
+                    indegree = 0;
+                    outdegree = 0;
+                }
+                vertex(int n){
+                    indegree = 0;
+                    outdegree = 0;
+                    for (int j = 0; j < n; ++j)
+                    {
+                        pair<double, vertex*> adj;
+                        adj.first = 0;
+                        adj.second = NULL;
+                        
+                        this->adj.push_back(adj);
+                    }
+                }
 
+                IGraph::vertex::iterator begin(){ 
+                    iterator_imp * first = new iterator_imp(&this->adj, this->adj.size()-1);
+                    typename IGraph::vertex::iterator f(first);
+                    return f;
+                }
 
-    public:
-        vector<ve> adj;
-        int indegree;
-        int outdegree;
- };
+                IGraph::vertex::iterator end(){
+                    iterator_imp * last = new iterator_imp(&this->adj, this->adj.size()-1);
+                    typename IGraph::vertex::iterator l(last);
+                    return l;
+                }
 
-template<class T>
-class Graph_Adj_Matrix : public IGraph<T> { 
-    public:
-    
-        class vertex_iterator : public forward_iterator_tag
-        {
             public:
-                typedef vertex_iterator self_type;
-                typedef vertex<T> value_type;
-                typedef value_type& reference;
-                typedef value_type* pointer;
-                typedef std::forward_iterator_tag iterator_category;
-                typedef int difference_type;
-                vertex_iterator(vector< vertex<T> > *ptr, int pos = 0) : ptr_(ptr) { this->pos = pos; }
-                self_type operator++() { self_type i = *this; pos++; return i; }
-                self_type operator++(int junk) { pos++; return *this; }
-                reference operator*() { return (*ptr_)[pos]; }
-                pointer operator->() { return &(*ptr_)[pos]; }
-                bool operator==(const self_type& rhs) { return pos == rhs.pos; }
-                bool operator!=(const self_type& rhs) { return pos != rhs.pos; }
-            private:
-                vector< vertex<T> > * ptr_;
-                int pos;
-        };
+                vector<ve> adj;
+                int indegree;
+                int outdegree;
+                int id;
+         };
 
         Graph_Adj_Matrix();
         Graph_Adj_Matrix(const Graph_Adj_Matrix &);
@@ -85,94 +94,104 @@ class Graph_Adj_Matrix : public IGraph<T> {
         ~Graph_Adj_Matrix();
         void addVertex(int v);
         void removeVertex(int v);
-        void addEdge(int v, int u, T w);
+        void addEdge(int v, int u, double w);
         void removeVertex(int v, int u);
         void inDegree(int v);
         void outDegree(int v);
         void getVertex(int v);
-        T getEdge(int v, int u);
-        void updateEdgeWeight(int v, int u, T w);
+        double getEdge(int v, int u);
+        void updateEdgeWeight(int v, int u, double w);
         bool edgeExists(int v, int u);
         bool vertexExists(int v);
         void nextAdjVertex(int v);
         bool isComplete();
+        int numVertices();
         void printAsMatrix();
 
-        Graph_Adj_Matrix<T>::vertex_iterator begin(){
-            vertex_iterator first(&this->vertices);
-            return first;
-        }
+        typename IGraph::vertex_iterator begin();
 
-        Graph_Adj_Matrix<T>::vertex_iterator end(){
-            vertex_iterator last(&this->vertices, this->vertices.size()-1);
-            return last;
-        }
+        typename IGraph::vertex_iterator end();
 
         Graph_Adj_Matrix & operator=(const Graph_Adj_Matrix&);
 
+    public:
+        class vertex_iterator_imp : public IGraph::vertex_iterator_imp{
+            public:
+                void next(){
+                    cout << "Next filho" << endl;
+                    pos++;
+                }
+                
+                IGraph::vertex_iterator_imp * clone(){
+                    return this;
+                }
+                
+                IGraph::vertex * get(){
+                    cout << "filho get" << endl;
+                    return &(*ptr_)[pos];
+                }
+
+                bool isEqual(const IGraph::vertex_iterator_imp& other){
+                    return get() == other.get();
+                }
+
+                vertex_iterator_imp(vector< Graph_Adj_Matrix::vertex >  * ptr, int pos = 0){
+                    cout << "sadasdasd : " << pos << endl;
+                    ptr_ = ptr;
+                    this->pos = pos;
+                }
+
+            private:
+                int pos;
+                vector< Graph_Adj_Matrix::vertex > * ptr_;
+        };
+
     private:
-        vector< vertex<T> > vertices;
+        vector< Graph_Adj_Matrix::vertex > vertices;
         int n;
         int m;
 };
 
-template <class T>
-Graph_Adj_Matrix<T>::Graph_Adj_Matrix(){
+Graph_Adj_Matrix::Graph_Adj_Matrix(){
     n = vertices.size();
     m = 0;
 }
 
-template <class T>
-Graph_Adj_Matrix<T>::Graph_Adj_Matrix(const Graph_Adj_Matrix<T> & g){
+Graph_Adj_Matrix::Graph_Adj_Matrix(const Graph_Adj_Matrix & g){
 
     this->n = g.n;
     this->m = g.m;
 }
 
-template <class T>
-Graph_Adj_Matrix<T>::Graph_Adj_Matrix(int n, int ini){
+Graph_Adj_Matrix::Graph_Adj_Matrix(int n, int ini){
     this->n = n;
     
     for (int i = 0; i < n; ++i)
     {
-        vertex<T> v;
-        for (int j = 0; j < n; ++j)
-        {
-            
-            pair<T, vertex<T>*> adj;
-            adj.first = 0;
-            adj.second = NULL;
-            
-            v.adj.push_back(adj);
-        }
-
+        Graph_Adj_Matrix::vertex v(n);
+        v.id = i;
         vertices.push_back(v);
     }
 }
 
-template <class T>
-Graph_Adj_Matrix<T>::~Graph_Adj_Matrix(){
+Graph_Adj_Matrix::~Graph_Adj_Matrix(){
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::addVertex(int v){
+void Graph_Adj_Matrix::addVertex(int v){
 
 }
 
 
-template <class T>
-void Graph_Adj_Matrix<T>::updateEdgeWeight(int v, int u, T w){
+void Graph_Adj_Matrix::updateEdgeWeight(int v, int u, double w){
     if(edgeExists(v, u))
         vertices[v].adj[u].first = w;
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::removeVertex(int v){
+void Graph_Adj_Matrix::removeVertex(int v){
 
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::addEdge(int v, int u, T w){
+void Graph_Adj_Matrix::addEdge(int v, int u, double w){
     if(edgeExists(v, u)) return updateEdgeWeight(v, u, w);
 
     if(vertexExists(v) && vertexExists(u)){
@@ -187,58 +206,51 @@ void Graph_Adj_Matrix<T>::addEdge(int v, int u, T w){
     }
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::removeVertex(int v, int u){
+void Graph_Adj_Matrix::removeVertex(int v, int u){
 
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::inDegree(int v){
+void Graph_Adj_Matrix::inDegree(int v){
 
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::outDegree(int v){
+void Graph_Adj_Matrix::outDegree(int v){
 
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::getVertex(int v){
+void Graph_Adj_Matrix::getVertex(int v){
 
 }
 
-template <class T>
-T Graph_Adj_Matrix<T>::getEdge(int v, int u){
+double Graph_Adj_Matrix::getEdge(int v, int u){
     return vertices[v].adj[u].first;
 }
 
-template <class T>
-bool Graph_Adj_Matrix<T>::edgeExists(int v, int u){
+bool Graph_Adj_Matrix::edgeExists(int v, int u){
 
     return (n > v && n > u && vertices[v].adj[u].second != NULL);
 }
 
-template <class T>
-bool Graph_Adj_Matrix<T>::vertexExists(int v){
+bool Graph_Adj_Matrix::vertexExists(int v){
     return (n > v);
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::nextAdjVertex(int v){
+void Graph_Adj_Matrix::nextAdjVertex(int v){
 
 }
 
-template <class T>
-bool Graph_Adj_Matrix<T>::isComplete(){
+bool Graph_Adj_Matrix::isComplete(){
     return m >= n*(n-1)/2;
 }
 
-template <class T>
-Graph_Adj_Matrix<T> & Graph_Adj_Matrix<T>::operator=(const Graph_Adj_Matrix<T>& g){
+int Graph_Adj_Matrix::numVertices(){
+    return vertices.size();
 }
 
-template <class T>
-void Graph_Adj_Matrix<T>::printAsMatrix(){
+Graph_Adj_Matrix & Graph_Adj_Matrix::operator=(const Graph_Adj_Matrix& g){
+}
+
+void Graph_Adj_Matrix::printAsMatrix(){
     for (int i = 0; i < n; ++i)
     {
         for (int j = 0; j < n; ++j)
@@ -248,6 +260,25 @@ void Graph_Adj_Matrix<T>::printAsMatrix(){
 
         cout << endl;
     }
+}
+
+IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
+    vertex_iterator_imp * first = new vertex_iterator_imp(&this->vertices);
+    IGraph::vertex_iterator_imp * ff = first;
+    first->get();
+    ff->get();
+    IGraph::vertex_iterator f(first);
+
+    return f;
+}
+
+IGraph::vertex_iterator  Graph_Adj_Matrix::end(){
+
+    Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(&this->vertices, this->vertices.size()-1);
+
+    IGraph::vertex_iterator l(last);
+
+    return l;
 }
 
 #endif 

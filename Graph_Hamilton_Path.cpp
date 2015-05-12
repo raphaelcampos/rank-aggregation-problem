@@ -1,11 +1,19 @@
 #include "IGraph.h"
 
 template<class T>
-IGraph<T> completeGraph2Tournament(IGraph<T> comp){
-	IGraph<T> tour;
-	
+IGraph<T> complete2Tournament(IGraph<T> &comp){
+	IGraph<T> tour(comp.numVertices());
+
 	if(comp.isComplete()){
-		
+		for(IGraph<int>::vertex_iterator v = comp.begin(); v != comp.end(); v++){
+
+			for (IGraph<int>::vertex::iterator u = v->begin(); u != v->end(); ++u)
+			{
+				
+			}
+
+		}
+
 	}
 
 	return tour;
