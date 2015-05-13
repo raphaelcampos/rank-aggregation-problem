@@ -14,7 +14,7 @@
 
 #include "IGraph.h"
 #include "Graph_Adj_Matrix2.hpp"
-//#include "Graph_Hamilton_Path.cpp"
+#include "Graph_Hamilton_Path.cpp"
 
 using namespace std;
 
@@ -93,6 +93,15 @@ int sort_and_count(int A[], int buffer[], int ini, int fim){
 
 }
 
+
+map<char, int> rank_from_array(int a[], int n){
+	std::map<char, int> rank;
+	for (int i = 0; i < n; ++i)
+	{
+		rank[(char)'A' + a[i]] = i + 1;
+	}
+	return rank;
+}
 
 map<char, int> rank_from_array(char a[], int n){
 	std::map<char, int> rank;
@@ -260,9 +269,17 @@ class GreaterOutDegree
 		  }
 };
 
-Graph_Adj_Matrix * create_majority_graph(char * ranks[], int rs, int k, int cl){
+/**
+ * [create_majority_graph description]
+ * @param  ranks [description]
+ * @param  rs    [description]
+ * @param  k     [description]
+ * @param  cl    [description]
+ * @return       [description]
+ */
+IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 
-	Graph_Adj_Matrix *g = new Graph_Adj_Matrix(cl);
+	IGraph *g = new Graph_Adj_Matrix(cl);
 
 	for (int i = 0; i < rs; ++i)
 	{
@@ -279,36 +296,12 @@ Graph_Adj_Matrix * create_majority_graph(char * ranks[], int rs, int k, int cl){
 		}
 	}
 
-	IGraph::vertex_iterator it = g->begin();
+	
+	IGraph * tour = new Graph_Adj_Matrix(g->numVertices());
 
-	/*for (int i = 0; i < cl; ++i)
-	{
-		cout << adj[i].first << " ";
-	}*/
-	//cout << " sddsd " << it->outdegree << endl;
+	complete2Tournament(*g, *tour);
 
-	//it++;
-	//cout << "outdegree : " << it->outdegree << endl;
-	//cout << "indegree : " << it->indegree << endl;
-
-	/*for (int i = 0; i < cl; ++i)
-	{
-		cout << it->adj[i].first << " ";
-	}
-
-	cout << endl;
-
-	it = g->end();	
-
-	for (int i = 0; i < cl; ++i)
-	{
-		cout << it->adj[i].first << " ";
-	}*/
-
-	cout << endl;
-
-	cout << "Size : " << (int)g->isComplete() << endl;
-	return g;
+	return tour;
 }
 
 pair<int, int> * create_majority_graph(int **G, char **ranks, int rs, int k, int n){
@@ -494,9 +487,17 @@ int main(int argc, char const *argv[])
 
 	pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
 	IGraph * graph = create_majority_graph(ranks_arr, count, k, cl);
-	
+	int* igr = hamiltonPathForTournament(*graph);
 
+	cout <<  "aqui : " ;
+	print_array(igr, cl);
+	map<char, int> rank_heuI = rank_from_array( igr, cl);
+	print_rank(rank_heuI);
+	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heuI, ranks, count) << endl;
+
+	
 	char * rh = hamiltonian_path_tournament(G, outdegree, cl);
+	
 	print_array(rh, cl);
 	map<char, int> rank_heu = rank_from_array( rh, cl);
 

@@ -11,14 +11,15 @@ class IGraph {
     public:
         class vertex_iterator_imp{
             public:
-                virtual void next(){
-                    cout << "sdasd" << endl;
-                }
-                 vertex_iterator_imp* clone() const;
-                virtual IGraph::vertex * get() const{
-                    cout << "get" << endl;
-                }
-                 bool isEqual(const vertex_iterator_imp& other) const;
+                virtual ~vertex_iterator_imp(){}
+                
+                virtual void next(){}
+
+                virtual IGraph::vertex_iterator_imp* clone(){}
+                
+                virtual IGraph::vertex * get() const{}
+
+                virtual bool isEqual(const IGraph::vertex_iterator_imp& other) const{}
         };
 
     public:
@@ -29,10 +30,10 @@ class IGraph {
             protected:
                 class iterator_imp{
                     public:
-                         void next();
-                         iterator_imp* clone() const;
-                         ve * get() const;
-                         bool isEqual(const iterator_imp& other) const;
+                        virtual void next() {}
+                        virtual iterator_imp* clone() {}
+                        virtual ve * get() const {}
+                        virtual bool isEqual(const iterator_imp& other) const {}
                 };
 
             public:
@@ -58,12 +59,10 @@ class IGraph {
                             return imp->get();
                         }
                         bool operator==(const self_type& rhs){
-                            iterator_imp i = *rhs.imp;
-                            return imp->isEqual(i);
+                            return imp->isEqual(*rhs.imp);
                         }
                         bool operator!=(const self_type& rhs){
-                             iterator_imp i = *rhs.imp;
-                            return !imp->isEqual(i);
+                            return !imp->isEqual(*rhs.imp);
                         }
 
                         iterator(iterator_imp * imp){
@@ -106,16 +105,13 @@ class IGraph {
                     return imp->get();
                 }
                 bool operator==(const self_type& rhs){
-                    //vertex_iterator_imp * i = *rhs.imp;
                     return imp->isEqual(*rhs.imp);
                 }
                 bool operator!=(const self_type& rhs){
-                    //vertex_iterator_imp i = *rhs.imp;
                     return !imp->isEqual(*rhs.imp);
                 }
 
                 vertex_iterator(vertex_iterator_imp * imp){
-                    //cout << imp->get()->id << endl;
                     this->imp = imp;
                 }
 
@@ -125,22 +121,99 @@ class IGraph {
 
     public:
         virtual ~IGraph() {}
+        
         virtual void addVertex(int v) = 0;
+        /**
+         * given the vertice id v, remove it from
+         * the graph
+         * @param v     vertice id
+         */
         virtual void removeVertex(int v) = 0;
+        
+        /**
+         * Add an new edge to the graph
+         * @param v source vertex id
+         * @param u destination vertex id
+         * @param w edge weight
+         */
         virtual void addEdge(int v, int u, double w) = 0;
-        virtual void removeVertex(int v, int u) = 0;
-        virtual void inDegree(int v) = 0;
-        virtual void outDegree(int v) = 0;
-        virtual void getVertex(int v) = 0;
+        
+        /**
+         * Remove a vertex from the graph
+         * @param v [description]
+         * @param u [description]
+         */
+        virtual void removeEdge(int v, int u) = 0;
+    
+        /**
+         * [getVertex description]
+         * @param  v [description]
+         * @return   [description]
+         */
+        virtual vertex * getVertex(int v) = 0;
+        
+        /**
+         * [getEdge description]
+         * @param  v [description]
+         * @param  u [description]
+         * @return   [description]
+         */
         virtual double getEdge(int v, int u) = 0;
+        
+        /**
+         * [updateEdgeWeight description]
+         * @param v [description]
+         * @param u [description]
+         * @param w [description]
+         */
         virtual void updateEdgeWeight(int v, int u, double w) = 0;
+        
+        /**
+         * [edgeExists description]
+         * @param  v [description]
+         * @param  u [description]
+         * @return   [description]
+         */
         virtual bool edgeExists(int v, int u) = 0;
+        
+        /**
+         * [vertexExists description]
+         * @param  v [description]
+         * @return   [description]
+         */
         virtual bool vertexExists(int v) = 0;
+
+        /**
+         * 
+         * @param v [description]
+         */
         virtual void nextAdjVertex(int v) = 0;
+        
+        /**
+         * true if the graph is complete, false otherwise
+         * @return bool
+         */
         virtual bool isComplete() = 0;
+        
+        /** 
+         * returns total number of vertices
+         * @return int
+         */
         virtual int numVertices() = 0;
 
+        /**
+         * iterator at first position
+         * it allows iterations on 
+         * the vertice's storage
+         * @return IGraph::vertex_iterator
+         */
         virtual vertex_iterator begin() = 0;
+
+        /**
+         * iterator for the end
+         * it determine the end of iteration
+         * @return IGraph::vertex_iterator
+         */
         virtual vertex_iterator end() = 0;
 };
 

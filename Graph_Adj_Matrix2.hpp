@@ -22,31 +22,36 @@ class Graph_Adj_Matrix : public IGraph {
                 class iterator_imp : public IGraph::vertex::iterator_imp{
                     public:
                         void next(){
-                            pos++;
+                            if(ptr_ == end_)
+                                return;
+
+                            ptr_++;
+                            if(ptr_->second == NULL && ptr_ != end_)
+                                next();
                         }
                         
                         IGraph::vertex::iterator_imp* clone(){
                             return this;
                         }
                         
-                        IGraph::ve * get(){
-                            IGraph::ve * v = &(*ptr_)[pos];
+                        IGraph::ve * get() const{
+                            IGraph::ve * v = &(*ptr_);
 
                             return v;
                         }
 
-                        bool isEqual(const IGraph::vertex::iterator_imp& other){
+                        bool isEqual(const IGraph::vertex::iterator_imp& other) const {
                             return get() == other.get();
                         }
 
-                        iterator_imp(vector< Graph_Adj_Matrix::vertex::ve >  * ptr, int pos = 0){
+                        iterator_imp(vector< Graph_Adj_Matrix::vertex::ve >::iterator ptr, vector< Graph_Adj_Matrix::vertex::ve >::iterator end){
                             ptr_ = ptr;
-                            this->pos = pos;
+                            end_ = end;
                         }
 
                     private:
-                        int pos;
-                        vector< Graph_Adj_Matrix::vertex::ve > * ptr_;
+                        vector< Graph_Adj_Matrix::vertex::ve >::iterator ptr_;
+                        vector< Graph_Adj_Matrix::vertex::ve >::iterator end_;
                 };
 
 
@@ -69,22 +74,23 @@ class Graph_Adj_Matrix : public IGraph {
                 }
 
                 IGraph::vertex::iterator begin(){ 
-                    iterator_imp * first = new iterator_imp(&this->adj, this->adj.size()-1);
-                    typename IGraph::vertex::iterator f(first);
+                    iterator_imp * first = new iterator_imp(this->adj.begin(), this->adj.end());
+                    
+                    if(first->get()->second == NULL)
+                        first->next();
+
+                    IGraph::vertex::iterator f(first);
                     return f;
                 }
 
                 IGraph::vertex::iterator end(){
-                    iterator_imp * last = new iterator_imp(&this->adj, this->adj.size()-1);
-                    typename IGraph::vertex::iterator l(last);
+                    iterator_imp * last = new iterator_imp(this->adj.end(), this->adj.end());
+                    IGraph::vertex::iterator l(last);
                     return l;
                 }
 
             public:
                 vector<ve> adj;
-                int indegree;
-                int outdegree;
-                int id;
          };
 
         Graph_Adj_Matrix();
@@ -95,10 +101,8 @@ class Graph_Adj_Matrix : public IGraph {
         void addVertex(int v);
         void removeVertex(int v);
         void addEdge(int v, int u, double w);
-        void removeVertex(int v, int u);
-        void inDegree(int v);
-        void outDegree(int v);
-        void getVertex(int v);
+        void removeEdge(int v, int u);
+        IGraph::vertex * getVertex(int v);
         double getEdge(int v, int u);
         void updateEdgeWeight(int v, int u, double w);
         bool edgeExists(int v, int u);
@@ -108,9 +112,9 @@ class Graph_Adj_Matrix : public IGraph {
         int numVertices();
         void printAsMatrix();
 
-        typename IGraph::vertex_iterator begin();
+        IGraph::vertex_iterator begin();
 
-        typename IGraph::vertex_iterator end();
+        IGraph::vertex_iterator end();
 
         Graph_Adj_Matrix & operator=(const Graph_Adj_Matrix&);
 
@@ -118,32 +122,27 @@ class Graph_Adj_Matrix : public IGraph {
         class vertex_iterator_imp : public IGraph::vertex_iterator_imp{
             public:
                 void next(){
-                    cout << "Next filho" << endl;
-                    pos++;
+                    ptr_++;
                 }
                 
                 IGraph::vertex_iterator_imp * clone(){
                     return this;
                 }
                 
-                IGraph::vertex * get(){
-                    cout << "filho get" << endl;
-                    return &(*ptr_)[pos];
+                IGraph::vertex * get() const{  
+                    return &(*ptr_);
                 }
 
-                bool isEqual(const IGraph::vertex_iterator_imp& other){
+                bool isEqual(const IGraph::vertex_iterator_imp& other) const{
                     return get() == other.get();
                 }
 
-                vertex_iterator_imp(vector< Graph_Adj_Matrix::vertex >  * ptr, int pos = 0){
-                    cout << "sadasdasd : " << pos << endl;
-                    ptr_ = ptr;
-                    this->pos = pos;
+                vertex_iterator_imp(vector< Graph_Adj_Matrix::vertex >::iterator ptr){
+                    this->ptr_ = ptr;
                 }
 
             private:
-                int pos;
-                vector< Graph_Adj_Matrix::vertex > * ptr_;
+                vector< Graph_Adj_Matrix::vertex >::iterator ptr_;
         };
 
     private:
@@ -181,14 +180,14 @@ void Graph_Adj_Matrix::addVertex(int v){
 
 }
 
+void Graph_Adj_Matrix::removeEdge(int v, int u){
+
+}
+
 
 void Graph_Adj_Matrix::updateEdgeWeight(int v, int u, double w){
     if(edgeExists(v, u))
         vertices[v].adj[u].first = w;
-}
-
-void Graph_Adj_Matrix::removeVertex(int v){
-
 }
 
 void Graph_Adj_Matrix::addEdge(int v, int u, double w){
@@ -206,20 +205,30 @@ void Graph_Adj_Matrix::addEdge(int v, int u, double w){
     }
 }
 
-void Graph_Adj_Matrix::removeVertex(int v, int u){
+void Graph_Adj_Matrix::removeVertex(int v){
+    if(!vertexExists(v)) return;
 
+    vertices[v].outdegree = 0;
+    vertices[v].indegree = 0;
+            
+    for (int u = 0; u < n; ++u)
+    {
+        if(edgeExists(v, u)){
+            vertices[v].adj[u].second->indegree--;
+        }
+
+        if(edgeExists(u, v)){
+            vertices[u].outdegree--; 
+            vertices[u].adj[v].first = 0;
+            vertices[u].adj[v].second = NULL;
+        }
+    }
 }
 
-void Graph_Adj_Matrix::inDegree(int v){
-
-}
-
-void Graph_Adj_Matrix::outDegree(int v){
-
-}
-
-void Graph_Adj_Matrix::getVertex(int v){
-
+IGraph::vertex * Graph_Adj_Matrix::getVertex(int v){
+    if(vertexExists(v))
+        return &vertices[v];
+    return NULL;
 }
 
 double Graph_Adj_Matrix::getEdge(int v, int u){
@@ -240,7 +249,7 @@ void Graph_Adj_Matrix::nextAdjVertex(int v){
 }
 
 bool Graph_Adj_Matrix::isComplete(){
-    return m >= n*(n-1)/2;
+    return m >= (n)*(n-1);
 }
 
 int Graph_Adj_Matrix::numVertices(){
@@ -263,7 +272,7 @@ void Graph_Adj_Matrix::printAsMatrix(){
 }
 
 IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
-    vertex_iterator_imp * first = new vertex_iterator_imp(&this->vertices);
+    vertex_iterator_imp * first = new vertex_iterator_imp(this->vertices.begin());
     IGraph::vertex_iterator_imp * ff = first;
     first->get();
     ff->get();
@@ -274,7 +283,7 @@ IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
 
 IGraph::vertex_iterator  Graph_Adj_Matrix::end(){
 
-    Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(&this->vertices, this->vertices.size()-1);
+    Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(this->vertices.end());
 
     IGraph::vertex_iterator l(last);
 
