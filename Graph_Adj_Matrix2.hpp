@@ -15,7 +15,7 @@ class Graph_Adj_Matrix : public IGraph {
     public:
         class vertex : public IGraph::vertex
         {
-            friend Graph_Adj_Matrix;
+            //friend Graph_Adj_Matrix;
             typedef pair<double, IGraph::vertex*> ve;
 
             protected:
@@ -36,7 +36,6 @@ class Graph_Adj_Matrix : public IGraph {
                         
                         IGraph::ve * get() const{
                             IGraph::ve * v = &(*ptr_);
-
                             return v;
                         }
 
@@ -78,13 +77,13 @@ class Graph_Adj_Matrix : public IGraph {
                     
                     if(first->get()->second == NULL)
                         first->next();
-
                     IGraph::vertex::iterator f(first);
                     return f;
                 }
 
                 IGraph::vertex::iterator end(){
                     iterator_imp * last = new iterator_imp(this->adj.end(), this->adj.end());
+
                     IGraph::vertex::iterator l(last);
                     return l;
                 }
@@ -284,6 +283,7 @@ IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
 IGraph::vertex_iterator  Graph_Adj_Matrix::end(){
 
     Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(this->vertices.end());
+
 
     IGraph::vertex_iterator l(last);
 

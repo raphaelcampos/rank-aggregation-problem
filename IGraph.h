@@ -11,6 +11,7 @@ class IGraph {
     public:
         class vertex_iterator_imp{
             public:
+
                 virtual ~vertex_iterator_imp(){}
                 
                 virtual void next(){}
@@ -25,8 +26,6 @@ class IGraph {
     public:
         class vertex
         {
-            friend IGraph;
-
             protected:
                 class iterator_imp{
                     public:
