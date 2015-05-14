@@ -15,6 +15,7 @@
 #include "IGraph.h"
 #include "Graph_Adj_Matrix2.hpp"
 #include "Graph_Hamilton_Path.cpp"
+#include "Graph_Search.cpp"
 
 using namespace std;
 
@@ -301,6 +302,12 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 
 	complete2Tournament(*g, *tour);
 
+	IGraph::vertex  * s = &(*tour->begin());
+	BFS(*tour, *s);
+
+	cout << (int)((Graph_Adj_Matrix*)tour)->thereIsUniversalSink() << endl;
+	((Graph_Adj_Matrix*)tour)->printAsMatrix();
+
 	return tour;
 }
 
@@ -422,8 +429,8 @@ int main(int argc, char const *argv[])
 
 	srand(time(NULL));
 	
-	int count = 10;
-	int k = 6; // top-k rank
+	int count = 3;
+	int k = 5; // top-k rank
 	map<char, int> *ranks = new map<char, int>[count];
 	char **ranks_arr = new char*[count];
 	map<char, int> opt;
@@ -436,7 +443,7 @@ int main(int argc, char const *argv[])
 	{
 		
 		ranks_arr[i] = new char[k];
-	 	ranks[i] = gen_rank(1,k,k, ranks_arr[i]);
+	 	ranks[i] = gen_rank(1,8, k, ranks_arr[i]);
 	 	//cout << ranks_arr[i] << endl;
 	}
 
@@ -487,7 +494,7 @@ int main(int argc, char const *argv[])
 
 	pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
 	IGraph * graph = create_majority_graph(ranks_arr, count, k, cl);
-	int* igr = hamiltonPathForTournament(*graph);
+	int* igr = DVhamiltonPathForTournament(*graph);
 
 	cout <<  "aqui : " ;
 	print_array(igr, cl);

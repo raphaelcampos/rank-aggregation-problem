@@ -5,17 +5,17 @@ void complete2Tournament(IGraph &comp, IGraph &tour){
 	if(comp.isComplete()){
 		for (IGraph::vertex_iterator v = comp.begin(); v != comp.end(); v++){
 			for (IGraph::vertex::iterator u = v->begin(); u != v->end(); u++){
-		
-				double w1 = comp.getEdge(v->id, u->second->id);
-				double w2 = comp.getEdge(u->second->id, v->id);
-				
-				if(w1 > w2)
-					tour.addEdge(v->id, u->second->id, 1);
-				else
-					tour.addEdge(u->second->id, v->id, 1);
+				if(!(tour.edgeExists(v->id,u->second->id) || tour.edgeExists(u->second->id, v->id))){
+					double w1 = comp.getEdge(v->id, u->second->id);
+					double w2 = comp.getEdge(u->second->id, v->id);
+					
+					if(w1 > w2)
+						tour.addEdge(v->id, u->second->id, 1);
+					else
+						tour.addEdge(u->second->id, v->id, 1);
+				}
 			}
 		}
-
 	}
 }
 
@@ -38,7 +38,7 @@ int * hamiltonPathForTournament(IGraph &tour){
 	}
 
 	Q.push(v);
-	
+	 	
 	int it = 0;
 	while(!Q.empty() && it < n){
 
@@ -65,6 +65,67 @@ int * hamiltonPathForTournament(IGraph &tour){
 		tour.removeVertex(v->id);
 		it++;
 	}
+
+	return path;
+}
+
+int tour_ham_merge_and_count(IGraph &tour, int *A, int *buffer, int ini, int fim, int meio){
+
+	memset(buffer, 0, sizeof(int)*(fim-ini+1));
+
+	int count = 0;
+
+	int i = ini;
+	int j = meio + 1;
+	
+	int k = 0;
+	while(i < meio + 1 && j <= fim){
+		if(tour.edgeExists(A[i], A[j])){
+			buffer[k] = A[i];
+			i++;
+		}else{
+			buffer[k] = A[j];
+			count += meio - i + 1;
+			j++;
+		}
+		k++;
+	}
+
+	if(i < meio + 1){
+		memcpy(buffer + k, A + i, sizeof(int)*(meio-i+1));
+	}else{
+		memcpy(buffer + k, A + j, sizeof(int)*(fim-j+1));
+	}
+	
+	memcpy(A + ini, buffer, sizeof(int)*(fim-ini+1));
+
+	return count;
+}
+
+int tour_ham_sort_and_count(IGraph &tour, int A[], int buffer[], int ini, int fim){
+
+	if(fim + 1 - ini <= 1){
+		return 0;
+	}else{
+		int meio = (ini + fim)/2;
+		return tour_ham_sort_and_count(tour, A, buffer, ini, meio) +
+		 tour_ham_sort_and_count(tour, A, buffer, meio + 1, fim) + 
+		 tour_ham_merge_and_count(tour, A, buffer, ini, fim, meio);
+		 ;
+	}
+
+}
+
+int * DVhamiltonPathForTournament(IGraph &tour){
+	int * path = new int[tour.numVertices()];
+	int * buffer = new int[tour.numVertices()];
+
+	for (IGraph::vertex_iterator it = tour.begin(); it != tour.end(); it++)
+	{
+		path[it->id] = it->id;
+	}
+
+	tour_ham_sort_and_count(tour, path, buffer, 0, tour.numVertices() - 1);
 
 	return path;
 }

@@ -180,7 +180,7 @@ class IGraph {
          * @param  v [description]
          * @return   [description]
          */
-        virtual bool vertexExists(int v) = 0;
+        inline virtual bool vertexExists(int v) = 0;
 
         /**
          * 

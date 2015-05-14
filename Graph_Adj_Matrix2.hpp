@@ -105,11 +105,12 @@ class Graph_Adj_Matrix : public IGraph {
         double getEdge(int v, int u);
         void updateEdgeWeight(int v, int u, double w);
         bool edgeExists(int v, int u);
-        bool vertexExists(int v);
+        inline bool vertexExists(int v);
         void nextAdjVertex(int v);
         bool isComplete();
         int numVertices();
         void printAsMatrix();
+        bool thereIsUniversalSink();
 
         IGraph::vertex_iterator begin();
 
@@ -239,7 +240,7 @@ bool Graph_Adj_Matrix::edgeExists(int v, int u){
     return (n > v && n > u && vertices[v].adj[u].second != NULL);
 }
 
-bool Graph_Adj_Matrix::vertexExists(int v){
+inline bool Graph_Adj_Matrix::vertexExists(int v){
     return (n > v);
 }
 
@@ -270,20 +271,40 @@ void Graph_Adj_Matrix::printAsMatrix(){
     }
 }
 
+bool Graph_Adj_Matrix::thereIsUniversalSink(){
+    bool us = true;
+
+    int candidate = 0;
+    for (int v = 1; v < n; ++v)
+    {
+        if(edgeExists(v-1, v) && !edgeExists(v, v-1)){
+            candidate = v;
+        }else if(edgeExists(v-1, v) && edgeExists(v, v-1)){
+            candidate = v+1;
+        }
+    }
+
+
+    for (int v = 0; v < n; ++v)
+    {
+        if(candidate != v)
+            us = us && (edgeExists(v, candidate) && !edgeExists(candidate, v));
+    }
+
+    cout << candidate << endl;
+    return us;
+}
+
 IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
     vertex_iterator_imp * first = new vertex_iterator_imp(this->vertices.begin());
-    IGraph::vertex_iterator_imp * ff = first;
-    first->get();
-    ff->get();
+    
     IGraph::vertex_iterator f(first);
 
     return f;
 }
 
 IGraph::vertex_iterator  Graph_Adj_Matrix::end(){
-
     Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(this->vertices.end());
-
 
     IGraph::vertex_iterator l(last);
 
