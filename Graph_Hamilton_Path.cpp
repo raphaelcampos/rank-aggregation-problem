@@ -2,7 +2,8 @@
 
 void complete2Tournament(IGraph &comp, IGraph &tour){
 
-	if(comp.isComplete()){
+	//if(comp.isComplete()){
+	//	cout << "complete2Tournament" << endl;
 		for (IGraph::vertex_iterator v = comp.begin(); v != comp.end(); v++){
 			for (IGraph::vertex::iterator u = v->begin(); u != v->end(); u++){
 				if(!(tour.edgeExists(v->id,u->second->id) || tour.edgeExists(u->second->id, v->id))){
@@ -16,7 +17,7 @@ void complete2Tournament(IGraph &comp, IGraph &tour){
 				}
 			}
 		}
-	}
+	//}
 }
 
 int * hamiltonPathForTournament(IGraph &tour){

@@ -16,6 +16,7 @@
 #include "Graph_Adj_Matrix2.hpp"
 #include "Graph_Hamilton_Path.cpp"
 #include "Graph_Search.cpp"
+#include "Graph_Minimum_Spanning_Tree.cpp"
 
 using namespace std;
 
@@ -297,15 +298,58 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 		}
 	}
 
+	IGraph *gmst = new Graph_Adj_Matrix(8);
+	IGraph::vertex * s = &(*gmst->begin());
 	
+	// A
+	gmst->addEdge(0,1,1);
+	gmst->addEdge(0,2,7);
+	// B
+	gmst->addEdge(1,0,1);
+	gmst->addEdge(1,2,4);
+	gmst->addEdge(1,3,9);
+	gmst->addEdge(1,4,6);
+	// C
+	gmst->addEdge(2,0,7);
+	gmst->addEdge(2,1,4);
+	gmst->addEdge(2,7,8);
+	// D
+	gmst->addEdge(3,2,1);
+	gmst->addEdge(3,4,11);
+	gmst->addEdge(3,6,2);
+	gmst->addEdge(3,7,5);
+	// E
+	gmst->addEdge(4,1,6);
+	gmst->addEdge(4,3,11);
+	gmst->addEdge(4,5,3);
+	// F
+	gmst->addEdge(5,4,3);
+	gmst->addEdge(5,6,10);
+	// G
+	gmst->addEdge(6,3,2);
+	gmst->addEdge(6,5,10);
+	gmst->addEdge(6,7,13);
+	// H
+	gmst->addEdge(7,2,8);
+	gmst->addEdge(7,3,5);
+	gmst->addEdge(7,6,13);
+	
+	MST_prim(*gmst, *s);
+	
+
+
 	IGraph * tour = new Graph_Adj_Matrix(g->numVertices());
 
 	complete2Tournament(*g, *tour);
 
-	IGraph::vertex  * s = &(*tour->begin());
-	BFS(*tour, *s);
+	s = &(*tour->begin());
+	//BFS(*tour, *s);
 
-	cout << (int)((Graph_Adj_Matrix*)tour)->thereIsUniversalSink() << endl;
+	DFS(*tour, *s);
+	s = &(*(tour->begin()++));
+	DFS(*tour, *s);
+
+	//cout << (int)((Graph_Adj_Matrix*)tour)->thereIsUniversalSink() << endl;
 	((Graph_Adj_Matrix*)tour)->printAsMatrix();
 
 	return tour;
@@ -430,7 +474,7 @@ int main(int argc, char const *argv[])
 	srand(time(NULL));
 	
 	int count = 3;
-	int k = 5; // top-k rank
+	int k = 8; // top-k rank
 	map<char, int> *ranks = new map<char, int>[count];
 	char **ranks_arr = new char*[count];
 	map<char, int> opt;
@@ -443,7 +487,7 @@ int main(int argc, char const *argv[])
 	{
 		
 		ranks_arr[i] = new char[k];
-	 	ranks[i] = gen_rank(1,8, k, ranks_arr[i]);
+	 	ranks[i] = gen_rank(1, k, k, ranks_arr[i]);
 	 	//cout << ranks_arr[i] << endl;
 	}
 

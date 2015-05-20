@@ -92,30 +92,35 @@ class Graph_Adj_Matrix : public IGraph {
                 vector<ve> adj;
          };
 
-        Graph_Adj_Matrix();
+        Graph_Adj_Matrix(bool directed = true);
         Graph_Adj_Matrix(const Graph_Adj_Matrix &);
-        Graph_Adj_Matrix(int n, int ini = 0);
+        Graph_Adj_Matrix(int n, int ini = 0, bool directed =  true);
         
         ~Graph_Adj_Matrix();
+
         void addVertex(int v);
         void removeVertex(int v);
+        
         void addEdge(int v, int u, double w);
         void removeEdge(int v, int u);
+        void updateEdgeWeight(int v, int u, double w);
+        
         IGraph::vertex * getVertex(int v);
         double getEdge(int v, int u);
-        void updateEdgeWeight(int v, int u, double w);
+        
         bool edgeExists(int v, int u);
         inline bool vertexExists(int v);
         void nextAdjVertex(int v);
+        
         bool isComplete();
         int numVertices();
-        void printAsMatrix();
+        int numEdges();
         bool thereIsUniversalSink();
-
+        
         IGraph::vertex_iterator begin();
-
         IGraph::vertex_iterator end();
 
+        void printAsMatrix();
         Graph_Adj_Matrix & operator=(const Graph_Adj_Matrix&);
 
     public:
@@ -151,18 +156,19 @@ class Graph_Adj_Matrix : public IGraph {
         int m;
 };
 
-Graph_Adj_Matrix::Graph_Adj_Matrix(){
+Graph_Adj_Matrix::Graph_Adj_Matrix(bool directed){
     n = vertices.size();
     m = 0;
+    this->directed = directed;
 }
 
 Graph_Adj_Matrix::Graph_Adj_Matrix(const Graph_Adj_Matrix & g){
-
     this->n = g.n;
     this->m = g.m;
+    this->directed = g.directed;
 }
 
-Graph_Adj_Matrix::Graph_Adj_Matrix(int n, int ini){
+Graph_Adj_Matrix::Graph_Adj_Matrix(int n, int ini, bool directed){
     this->n = n;
     
     for (int i = 0; i < n; ++i)
@@ -202,6 +208,10 @@ void Graph_Adj_Matrix::addEdge(int v, int u, double w){
         vertices[v].adj[u].second->indegree++;
         
         m++;
+
+        if(!directed){
+            Graph_Adj_Matrix::addEdge(u, v, w);
+        }
     }
 }
 
@@ -256,6 +266,10 @@ int Graph_Adj_Matrix::numVertices(){
     return vertices.size();
 }
 
+int Graph_Adj_Matrix::numEdges(){
+    return m;
+}
+
 Graph_Adj_Matrix & Graph_Adj_Matrix::operator=(const Graph_Adj_Matrix& g){
 }
 
@@ -303,7 +317,7 @@ IGraph::vertex_iterator  Graph_Adj_Matrix::begin(){
     return f;
 }
 
-IGraph::vertex_iterator  Graph_Adj_Matrix::end(){
+IGraph::vertex_iterator Graph_Adj_Matrix::end(){
     Graph_Adj_Matrix::vertex_iterator_imp * last = new Graph_Adj_Matrix::vertex_iterator_imp(this->vertices.end());
 
     IGraph::vertex_iterator l(last);

@@ -200,6 +200,12 @@ class IGraph {
          */
         virtual int numVertices() = 0;
 
+        /** 
+         * returns total number of edges
+         * @return int
+         */
+        virtual int numEdges() = 0;
+
         /**
          * iterator at first position
          * it allows iterations on 
@@ -214,6 +220,9 @@ class IGraph {
          * @return IGraph::vertex_iterator
          */
         virtual vertex_iterator end() = 0;
+
+    protected:    
+        bool directed;
 };
 
 #endif 
