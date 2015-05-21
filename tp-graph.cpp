@@ -1,6 +1,8 @@
 
 #include <iomanip>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 #include <string.h>
 #include <time.h>
@@ -18,6 +20,8 @@
 
 using namespace std;
 
+typedef std::vector<int> nl_t;
+typedef std::vector<nl_t> nll_t;
 
 void print_array(int a[], int n){
 	for (int l = 0; l < n; ++l)
@@ -26,6 +30,24 @@ void print_array(int a[], int n){
 	}
 	cout << endl;
 	
+}
+
+void load_from_file(){
+	std::ifstream is("instancia/inGA.txt");
+    std::string str;
+
+    nll_t nll;
+
+	while(std::getline(is,str)) {
+        std::istringstream ss(str);
+        nl_t nl;
+        int i;
+
+        while(ss >> i) {
+            nl.push_back(i);
+        }
+        nll.push_back(nl);
+    }
 }
 
 int main(int argc, char const *argv[])
@@ -78,12 +100,12 @@ int main(int argc, char const *argv[])
 	//G.addEdge(0, 6, 1);
 	//G.addEdge(0, 7, 1);
 
-	//G1.addEdge(1, 2, 1);
-	G1.addEdge(1, 3, 1);
+	G1.addEdge(1, 2, 1);
+	//G1.addEdge(1, 3, 1);
 	//G.addEdge(1, 6, 1);
 	//G.addEdge(1, 7, 1);
 
-	G1.addEdge(2, 3, 1);
+	//G1.addEdge(2, 3, 1);
 	G1.addEdge(2, 4, 1);
 	//G.addEdge(2, 6, 1);
 	
@@ -97,9 +119,11 @@ int main(int argc, char const *argv[])
 	G1.addEdge(5, 6, 1);
 
 	G1.putVertexInA(*G1.getVertex(1));
-	G1.putVertexInA(*G1.getVertex(0));
+	G1.putVertexInA(*G1.getVertex(6));
 
 	G1.printAsMatrix();
 
 	G1.partionate();
+
+	load_from_file();
 }

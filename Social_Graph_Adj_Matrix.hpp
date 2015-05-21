@@ -13,7 +13,7 @@
 using namespace std;
 
 class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
-    friend Graph_Adj_Matrix;
+    
     public:
         enum { GROUP_A, GROUP_B };
 
@@ -73,6 +73,7 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
         void partionate();
         double calcCNormalized(int eAA, int eAB);
         void putVertexInA(IGraph::vertex &v);
+        inline double rank(int id);
     
     public:
         int *group;
@@ -192,6 +193,25 @@ void Social_Graph_Adj_Matrix::putVertexInA(IGraph::vertex &u){
     }
 }
 
+inline double Social_Graph_Adj_Matrix::rank(int id){
+
+    /*int tmp_eAA = eGroupA;
+    int tmp_eAB = eGroupAB;        
+
+    tmp_eAA += outGroup[id];
+    tmp_eAB += inGroup[id] - outGroup[id];
+   
+    return calcCNormalized(tmp_eAA, tmp_eAB);*/
+    //return (double)outGroup[id]/(double)(inGroup[id]+1);
+    /*if(outGroup[id] != 0 && inGroup[id] != 0){
+        return (double)outGroup[id]/(double)inGroup[id];
+    }else if(outGroup[id] == 0){
+        return -100000000;
+    }else if(inGroup[id] == 0){
+        return 10000000;
+    }*/
+}
+
 /**
  * O(1)
  * @param  eAA [description]
@@ -200,9 +220,6 @@ void Social_Graph_Adj_Matrix::putVertexInA(IGraph::vertex &u){
  */
 double Social_Graph_Adj_Matrix::calcCNormalized(int eAA, int eAB){
     double E = numEdges()/2;
-    cout << E << endl;
-    cout << eAA << endl;
-    cout << eAB << endl;
     return (eAA/(double)(eAA+eAB)) - ((E - eAA)/(double)(E + eAB));
 }
 
@@ -219,14 +236,14 @@ void Social_Graph_Adj_Matrix::partionate(){
             groupA.push_back(&(*it));
         }else{
             groupB.push_back(&(*it));
-            Q.push(make_pair(outGroup[id]/(double)(inGroup[id]+1), &(*it)));
+            Q.push(make_pair(Social_Graph_Adj_Matrix::rank(id), &(*it)));
         }
     }
 
     for (int i = 0; i < groupB.size(); ++i)
     {
         int id = groupB[i]->id;
-        cout << id << " : " << (double)outGroup[id]/(double)inGroup[id] << endl;
+        cout << id << " : " << Social_Graph_Adj_Matrix::rank(id) << endl;
     }
 
 
@@ -242,10 +259,10 @@ void Social_Graph_Adj_Matrix::partionate(){
        
         CNdep = calcCNormalized(tmp_eAA, tmp_eAB);
 
-        cout << v->id << " : " << CNant << " < " << CNdep << endl;
-
         Q.pop();
+
         if(group[v->id] == GROUP_B && CNant < CNdep){
+            cout << v->id << " : " << CNant << " < " << CNdep << endl;    
             putVertexInA(*v);
             groupA.push_back(&(*v));
             
@@ -254,16 +271,17 @@ void Social_Graph_Adj_Matrix::partionate(){
             {   
                 IGraph::vertex * u = e->second;
                 if(group[u->id] == GROUP_B){
-                    Q.push(make_pair(outGroup[u->id]/(double)(inGroup[u->id]+1), &(*u)));
+                    Q.push(make_pair(Social_Graph_Adj_Matrix::rank(u->id), &(*u)));
                 }
             }
         }
     }while(!Q.empty() && CNant < CNdep);
 
+    cout << "EM A" << endl;
     for (int i = 0; i < groupA.size(); ++i)
     {
         int id = groupA[i]->id;
-        cout << id << " : " << (double)outGroup[id]/(double)inGroup[id] << endl;
+        cout << id << " : " << Social_Graph_Adj_Matrix::rank(id) << endl;
     }
 
 }
