@@ -199,7 +199,7 @@ void Social_Graph_Adj_Matrix::putVertexInA(IGraph::vertex &u){
  * @return     [description]
  */
 double Social_Graph_Adj_Matrix::calcCNormalized(int eAA, int eAB){
-    double E = numEdges();
+    double E = numEdges()/2;
     cout << E << endl;
     cout << eAA << endl;
     cout << eAB << endl;
