@@ -32,22 +32,41 @@ void print_array(int a[], int n){
 	
 }
 
-void load_from_file(){
-	std::ifstream is("instancia/inGA.txt");
+Social_Graph_Adj_Matrix * load_from_file(string filename){
+	std::ifstream is(filename.c_str());
     std::string str;
 
     nll_t nll;
+    cout << nll.size() << endl;
 
 	while(std::getline(is,str)) {
         std::istringstream ss(str);
         nl_t nl;
         int i;
 
-        while(ss >> i) {
-            nl.push_back(i);
-        }
-        nll.push_back(nl);
+        if(ss >> i){
+        	nl.push_back(i);
+	        while(ss >> i) {
+	        	nl.push_back(i);
+	        }
+
+	        nll.push_back(nl);
+	    }
     }
+
+    Social_Graph_Adj_Matrix *G = new Social_Graph_Adj_Matrix(nll.size());
+    cout << nll.size() << endl;
+    for (int i = 0; i < nll.size(); ++i)
+    {
+    	for (int j = 1; j < nll[i].size(); ++j)
+    	{
+    		//cout << nll[i][0] << " " << nll[i][j] << " " <<  endl;
+    		G->addEdge(nll[i][0], nll[i][j], 1);
+    	}
+    }
+
+    return G;
+
 }
 
 int main(int argc, char const *argv[])
@@ -125,5 +144,11 @@ int main(int argc, char const *argv[])
 
 	G1.partionate();
 
-	load_from_file();
+	Social_Graph_Adj_Matrix *graph = load_from_file("instancia/inGA.txt");
+	
+	for (int i = 0; i < 20; ++i)
+	{
+		graph->putVertexInA(*graph->getVertex(rand()%100));
+	}
+	graph->partionate();
 }
