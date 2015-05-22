@@ -144,11 +144,13 @@ int main(int argc, char const *argv[])
 
 	G1.partionate();
 
-	Social_Graph_Adj_Matrix *graph = load_from_file("instancia/inGA.txt");
-	
+	Social_Graph_Adj_Matrix *graph = load_from_file("instancia/inGB.txt");
+	srand(0);
+	int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
 	for (int i = 0; i < 20; ++i)
 	{
-		graph->putVertexInA(*graph->getVertex(rand()%100));
+		//graph->putVertexInA(*graph->getVertex(rand()%100));
+		graph->putVertexInA(*graph->getVertex(ids[i]));
 	}
 	graph->partionate();
 }
