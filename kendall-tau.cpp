@@ -336,7 +336,8 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 	gmst->addEdge(7,6,13);
 	
 	MST_prim(*gmst, *s);
-	dijkstra(*gmst, *s);
+	graph::dijkstra(*gmst, *s);
+	graph::bellman_ford(*gmst, *s);
 
 	IGraph * tour = new Graph_Adj_Matrix(g->numVertices());
 

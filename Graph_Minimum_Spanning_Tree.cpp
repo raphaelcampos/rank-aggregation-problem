@@ -11,7 +11,7 @@
  * @param G [description]
  * @param s [description]
  */
-void MST_prim(IGraph &G, IGraph::vertex &s){
+void MST_prim(IGraph &G, IGraph::vertex &s, double inf = 1e100){
 	int n = G.numVertices();
 	bool *isQ = new bool[n];
 	IGraph::vertex ** pi = new IGraph::vertex *[n];
@@ -24,16 +24,14 @@ void MST_prim(IGraph &G, IGraph::vertex &s){
 
 	for (int i = 0; i < n; ++i)
 	{
-		vertices.push_back(make_pair(1000000, i));
-		Q.insert(i, 1000000);
+		vertices.push_back(make_pair(inf, i));
+		Q.insert(i, inf);
 		pi[i] = NULL;
 		isQ[i] = true;
 	}
 
 	vertices[s.id].first = 0;
 	Q.changeKey(s.id, 0);
-
-	//priority_queue< vi, vector<vi>, std::greater<vi> > Q(vertices.begin(), vertices.begin() + n);
 
 	int it = 0;
 	while(!Q.isEmpty()){

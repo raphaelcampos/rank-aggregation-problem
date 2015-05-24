@@ -7,13 +7,6 @@
 
 using namespace std;
 
-/*
- * Indexed min priority queue
- * Supports insertion in O(log N), deletion of any key (regardless of whether
- * the key is the minimum key or not) in O(log N) and changes to key values
- * in O(log N), where N is the number of
- * elements currently in the PQ
- */
 template<
     typename key_type,
     typename comparer_type = std::greater<key_type>
@@ -49,7 +42,7 @@ class IndexedPriorityQueue {
     }
 
 public:
-    // Create an empty MinIndexedPQ which can contain atmost NMAX elements
+    // Create an empty IndexedPQ which can contain atmost NMAX elements
     IndexedPriorityQueue(int NMAX)  {
         this->NMAX = NMAX;
         N = 0;
