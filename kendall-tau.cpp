@@ -17,6 +17,7 @@
 #include "Graph_Hamilton_Path.cpp"
 #include "Graph_Search.cpp"
 #include "Graph_Minimum_Spanning_Tree.cpp"
+#include "Single_Source_Shortest_Path.cpp"
 
 using namespace std;
 
@@ -335,8 +336,7 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 	gmst->addEdge(7,6,13);
 	
 	MST_prim(*gmst, *s);
-	
-
+	dijkstra(*gmst, *s);
 
 	IGraph * tour = new Graph_Adj_Matrix(g->numVertices());
 

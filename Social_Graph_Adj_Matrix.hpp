@@ -9,144 +9,9 @@
 
 #include "Graph_Adj_Matrix2.hpp"
 #include "IGraph.h"
+#include "PriorityQueue.cpp"
 
 using namespace std;
-
-#include <cstdio>
-
-/*
- * Indexed min priority queue
- * Supports insertion in O(log N), deletion of any key (regardless of whether
- * the key is the minimum key or not) in O(log N) and changes to key values
- * in O(log N), where N is the number of
- * elements currently in the PQ
- */
-template<typename key_type>
-class MinIndexedPQ {
-    int NMAX, N, *heap, *index;
-    key_type *keys;
-
-    void swap(int i, int j) {
-        int t = heap[i]; heap[i] = heap[j]; heap[j] = t;
-        index[heap[i]] = i; index[heap[j]] = j;
-    }
-
-    void bubbleUp(int k)    {
-        while(k > 1 && keys[heap[k/2]] < keys[heap[k]])   {
-            swap(k, k/2);
-            k = k/2;
-        }
-    }
-
-    void bubbleDown(int k)  {
-        int j;
-        while(2*k <= N) {
-            j = 2*k;
-            if(j < N && keys[heap[j]] < keys[heap[j+1]])
-                j++;
-            if(keys[heap[k]] >= keys[heap[j]])
-                break;
-            swap(k, j);
-            k = j;
-        }
-    }
-
-public:
-    // Create an empty MinIndexedPQ which can contain atmost NMAX elements
-    MinIndexedPQ(int NMAX)  {
-        this->NMAX = NMAX;
-        N = 0;
-        keys = new key_type[NMAX + 1];
-        heap = new int[NMAX + 1];
-        index = new int[NMAX + 1];
-        for(int i = 0; i <= NMAX; i++)
-            index[i] = -1;
-    }
-    
-    ~MinIndexedPQ() {
-        delete [] keys;
-        delete [] heap;
-        delete [] index;
-    }
-
-    // check if the PQ is empty
-    bool isEmpty()  {
-        return N == 0;
-    }
-
-    // check if i is an index on the PQ
-    bool contains(int i)    {
-        return index[i] != -1;
-    }
-
-    // return the number of elements in the PQ
-    int size()  {
-        return N;
-    }
-
-    // associate key with index i; 0 < i < NMAX
-    void insert(int i, key_type key) {
-        N++;
-        index[i] = N;
-        heap[N] = i;
-        keys[i] = key;
-        bubbleUp(N);
-    }
-
-    // returns the index associated with the minimal key
-    int minIndex()  {
-        return heap[1];
-    }
-
-    // returns the minimal key
-    int minKey()    {
-        return keys[heap[1]];
-    }
-
-    // delete the minimal key and return its associated index
-    // Warning: Don't try to read from this index after calling this function
-    int deleteMin() {
-        int min = heap[1];
-        swap(1, N--);
-        bubbleDown(1);
-        index[min] = -1;
-        heap[N+1] = -1;
-        return min;
-    }
-
-    // returns the key associated with index i
-    int keyOf(int i)    {
-        return keys[i];
-    }
-
-    // change the key associated with index i to the specified value
-    void changeKey(int i, key_type key)  {
-        keys[i] = key;
-        bubbleUp(index[i]);
-        bubbleDown(index[i]);
-    }
-
-    // decrease the key associated with index i to the specified value
-    void decreaseKey(int i, key_type key)    {
-        keys[i] = key;
-        bubbleUp(index[i]);
-    }
-
-    // increase the key associated with index i to the specified value
-    void increaseKey(int i, key_type key)    {
-        keys[i] = key;
-        bubbleDown(index[i]);
-    }
-
-    // delete the key associated with index i
-    void deleteKey(int i)   {
-        int ind = index[i];
-        swap(ind, N--);
-        bubbleUp(ind);
-        bubbleDown(ind);
-        index[i] = -1;
-    }
-};
 
 class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
     
@@ -361,7 +226,7 @@ double Social_Graph_Adj_Matrix::calcCNormalized(int eAA, int eAB){
 
 void Social_Graph_Adj_Matrix::partionate(){
     typedef pair<double, IGraph::vertex*> item;
-    MinIndexedPQ<double> Q(numVertices());
+    IndexedPriorityQueue<double> Q(numVertices());
     groupB.clear();
     groupA.clear();
 
@@ -379,11 +244,6 @@ void Social_Graph_Adj_Matrix::partionate(){
 
     double CNant, CNdep;
     do{
-        for (int i = 0; i < groupB.size(); ++i)
-        {
-            int id = groupB[i];
-            cout << id << " : " << Social_Graph_Adj_Matrix::rank(id) << endl;
-        }
         int tmp_eAA = eGroupA;
         int tmp_eAB = eGroupAB;
         CNant = calcCNormalized(eGroupA, eGroupAB);
@@ -397,7 +257,7 @@ void Social_Graph_Adj_Matrix::partionate(){
         Q.deleteMin();
 
         if(group[v->id] == GROUP_B && CNant < CNdep){
-            cout << v->id << " : " << CNant << " < " << CNdep << endl;    
+            //cout << v->id << " : " << CNant << " < " << CNdep << endl;    
             putVertexInA(*v);
             groupA.push_back(v->id);
             
@@ -411,20 +271,12 @@ void Social_Graph_Adj_Matrix::partionate(){
             }
         }
     }while(!Q.isEmpty() && CNant < CNdep);
-
     
     vector<int> groupC(groupA.size() + groupB.size());
     sort(groupA.begin(), groupA.end());
     sort(groupB.begin(), groupB.end());
 
     vector<int>::iterator it = set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), groupC.begin());
-
-    /*cout << "EM A" << endl;
-    for (int i = 0; i < groupA.size(); ++i)
-    {
-        int id = groupA[i];
-        cout << id << " : " << Social_Graph_Adj_Matrix::rank(id) << endl;
-    }*/
 
     groupC.resize(it - groupC.begin());
     cout << "EM B " << groupA.size() << endl;
