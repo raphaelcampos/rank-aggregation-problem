@@ -315,7 +315,7 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 	gmst->addEdge(2,1,4);
 	gmst->addEdge(2,7,8);
 	// D
-	gmst->addEdge(3,2,1);
+	gmst->addEdge(3,1,9);
 	gmst->addEdge(3,4,11);
 	gmst->addEdge(3,6,2);
 	gmst->addEdge(3,7,5);

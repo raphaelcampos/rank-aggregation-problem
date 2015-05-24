@@ -197,9 +197,10 @@ void Graph_Adj_Matrix::updateEdgeWeight(int v, int u, double w){
 }
 
 void Graph_Adj_Matrix::addEdge(int v, int u, double w){
-    if(edgeExists(v, u)) return updateEdgeWeight(v, u, w);
+    if(Graph_Adj_Matrix::edgeExists(v, u)) return Graph_Adj_Matrix::updateEdgeWeight(v, u, w);
 
-    if(vertexExists(v) && vertexExists(u)){
+    if(Graph_Adj_Matrix::vertexExists(v) && Graph_Adj_Matrix::vertexExists(u)){
+        
         vertices[v].adj[u].first = w;
         vertices[v].adj[u].second = &vertices[u];
 
@@ -304,8 +305,7 @@ bool Graph_Adj_Matrix::thereIsUniversalSink(){
         if(candidate != v)
             us = us && (edgeExists(v, candidate) && !edgeExists(candidate, v));
     }
-
-    cout << candidate << endl;
+    
     return us;
 }
 

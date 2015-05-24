@@ -37,7 +37,6 @@ Social_Graph_Adj_Matrix * load_from_file(string filename){
     std::string str;
 
     nll_t nll;
-    cout << nll.size() << endl;
 
 	while(std::getline(is,str)) {
         std::istringstream ss(str);
@@ -55,12 +54,11 @@ Social_Graph_Adj_Matrix * load_from_file(string filename){
     }
 
     Social_Graph_Adj_Matrix *G = new Social_Graph_Adj_Matrix(nll.size());
-    cout << nll.size() << endl;
+    
     for (int i = 0; i < nll.size(); ++i)
     {
     	for (int j = 1; j < nll[i].size(); ++j)
     	{
-    		//cout << nll[i][0] << " " << nll[i][j] << " " <<  endl;
     		G->addEdge(nll[i][0], nll[i][j], 1);
     	}
     }
@@ -71,86 +69,29 @@ Social_Graph_Adj_Matrix * load_from_file(string filename){
 
 int main(int argc, char const *argv[])
 {
-	Social_Graph_Adj_Matrix G(8);
-
-	G.addEdge(0, 3, 1);
-	G.addEdge(0, 5, 1);
-	//G.addEdge(0, 6, 1);
-	//G.addEdge(0, 7, 1);
-
-	G.addEdge(1, 2, 1);
-	G.addEdge(1, 3, 1);
-	G.addEdge(1, 4, 1);
-	//G.addEdge(1, 6, 1);
-	//G.addEdge(1, 7, 1);
-
-	G.addEdge(2, 4, 1);
-	G.addEdge(2, 5, 1);
-	G.addEdge(2, 6, 1);
+	char * f = "instancia/inGA.txt";
+	Social_Graph_Adj_Matrix *graph = load_from_file(f);
 	
-	G.addEdge(3, 7, 1);
-	
-	G.addEdge(4, 5, 1);
-	//G.addEdge(4, 6, 1);
-
-	G.addEdge(6, 7, 1);
-
-	G.printAsMatrix();
-
-	cout << G.eGroupA << " " << G.eGroupAB << endl;
-
-	G.putVertexInA(*G.getVertex(0));
-
-	cout << G.eGroupA << " " << G.eGroupAB << endl;
-
-	G.putVertexInA(*G.getVertex(1));
-
-	cout << G.eGroupA << " " << G.eGroupAB << endl;
-
-	print_array(G.inGroup, 8);
-	print_array(G.outGroup, 8);
-
-	G.partionate();
-
-	Social_Graph_Adj_Matrix G1(7);
-
-	G1.addEdge(0, 1, 1);
-	G1.addEdge(0, 2, 1);
-	//G.addEdge(0, 6, 1);
-	//G.addEdge(0, 7, 1);
-
-	G1.addEdge(1, 2, 1);
-	//G1.addEdge(1, 3, 1);
-	//G.addEdge(1, 6, 1);
-	//G.addEdge(1, 7, 1);
-
-	//G1.addEdge(2, 3, 1);
-	G1.addEdge(2, 4, 1);
-	//G.addEdge(2, 6, 1);
-	
-	G1.addEdge(3, 4, 1);
-	G1.addEdge(3, 5, 1);
-	G1.addEdge(3, 6, 1);
-	
-	G1.addEdge(4, 5, 1);
-	G1.addEdge(4, 6, 1);
-
-	G1.addEdge(5, 6, 1);
-
-	G1.putVertexInA(*G1.getVertex(1));
-	G1.putVertexInA(*G1.getVertex(6));
-
-	G1.printAsMatrix();
-
-	G1.partionate();
-
-	Social_Graph_Adj_Matrix *graph = load_from_file("instancia/inGA.txt");
-	srand(time(NULL));
 	int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
 	for (int i = 0; i < 20; ++i)
 	{
 		//graph->putVertexInA(*graph->getVertex(rand()%100));
 		graph->putVertexInA(*graph->getVertex(ids[i]));
 	}
-	graph->partionate();
+	graph->partion();
+
+	//delete [] graph;
+
+	Social_Graph_Adj_Matrix *graph1 = load_from_file(f);
+	srand(time(NULL));
+	//int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
+	for (int i = 0; i < 20; ++i)
+	{
+		//graph->putVertexInA(*graph->getVertex(rand()%100));
+		graph1->putVertexInA(*graph1->getVertex(ids[i]));
+	}
+	graph1->partionate();
+
+
+	//delete [] graph1;
 }

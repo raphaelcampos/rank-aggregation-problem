@@ -71,7 +71,9 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
         IGraph::vertex * getVertex(int v);
         double getEdge(int v, int u);
         
+        void partion();
         void partionate();
+        double calcCNormalizedVertex(int v);
         double calcCNormalized(int eAA, int eAB);
         void putVertexInA(IGraph::vertex &v);
         inline double rank(int id);
@@ -130,7 +132,6 @@ void Social_Graph_Adj_Matrix::removeEdge(int v, int u){
     Graph_Adj_Matrix::removeEdge(v, u);
 }
 
-
 void Social_Graph_Adj_Matrix::updateEdgeWeight(int v, int u, double w){
     Graph_Adj_Matrix::updateEdgeWeight(v, u, w);
 }
@@ -139,10 +140,10 @@ void Social_Graph_Adj_Matrix::addEdge(int v, int u, double w){
     IGraph::vertex *sv = (IGraph::vertex*)getVertex(v);
     IGraph::vertex *su = (IGraph::vertex*)getVertex(u);
 
-    if(edgeExists(v, u)) return;
-
-    if(v == 1 || u == 1)
-        cout << v << "," << u << endl;
+    if(Graph_Adj_Matrix::edgeExists(v, u) || Graph_Adj_Matrix::edgeExists(u, v)){
+        Graph_Adj_Matrix::addEdge(v, u, w);
+        return;
+    }
 
     if(group[sv->id] == group[su->id]){
         inGroup[sv->id]++;
@@ -195,15 +196,6 @@ void Social_Graph_Adj_Matrix::putVertexInA(IGraph::vertex &u){
 }
 
 inline double Social_Graph_Adj_Matrix::rank(int id){
-
-    int tmp_eAA = eGroupA;
-    int tmp_eAB = eGroupAB;        
-
-    /*tmp_eAA += outGroup[id];
-    tmp_eAB += inGroup[id] - outGroup[id];
-   
-    return calcCNormalized(tmp_eAA, tmp_eAB);*/
-    //return (double)outGroup[id]/(double)(inGroup[id]+1);
     if(outGroup[id] != 0 && inGroup[id] != 0){
         return (double)outGroup[id]/(double)inGroup[id];
     }else if(outGroup[id] == 0){
@@ -217,11 +209,86 @@ inline double Social_Graph_Adj_Matrix::rank(int id){
  * O(1)
  * @param  eAA [description]
  * @param  eAB [description]
- * @return     [description]
+ * @return      Normalized Condutancy
  */
 double Social_Graph_Adj_Matrix::calcCNormalized(int eAA, int eAB){
     double E = numEdges()/2;
     return (eAA/(double)(eAA+eAB)) - ((E - eAA)/(double)(E + eAB));
+}
+
+/**
+ * O(1)
+ * @param  v  vertex id
+ * @return     Normalized Condutancy
+ */
+double Social_Graph_Adj_Matrix::calcCNormalizedVertex(int v){
+    int tmp_eAA = eGroupA;
+    int tmp_eAB = eGroupAB;
+
+    tmp_eAA += outGroup[v];
+    tmp_eAB += inGroup[v] - outGroup[v];
+   
+    return calcCNormalized(tmp_eAA, tmp_eAB);
+}
+
+void Social_Graph_Adj_Matrix::partion(){
+    typedef pair<double, IGraph::vertex*> item;
+    IndexedPriorityQueue<double> Q(numVertices());
+    groupB.clear();
+    groupA.clear();
+
+    for (IGraph::vertex_iterator it = begin(); it != end(); ++it)
+    {
+        int id = it->id;
+        if(group[id] == GROUP_A){
+            groupA.push_back(it->id);
+            groupB.push_back(it->id);
+        }else{
+            groupB.push_back(it->id);
+            Q.insert(id, Social_Graph_Adj_Matrix::calcCNormalizedVertex(id));
+        }
+    }
+
+    double CNant, CNdep;
+    do{
+        IGraph::vertex * v = getVertex(Q.minIndex());
+        
+        CNant = calcCNormalized(eGroupA, eGroupAB);
+        CNdep = calcCNormalizedVertex(v->id);
+
+        Q.deleteMin();
+
+        if(group[v->id] == GROUP_B && CNant < CNdep){
+            //cout << v->id << " : " << CNant << " < " << CNdep << endl;    
+            putVertexInA(*v);
+            groupA.push_back(v->id);
+            
+            for (int i = 0; i < numVertices(); ++i)
+            {
+                if(group[i] != GROUP_B) continue;
+                v = getVertex(i);
+
+                Q.changeKey(v->id, Social_Graph_Adj_Matrix::calcCNormalizedVertex(v->id));
+            }
+        }
+    }while(!Q.isEmpty() && CNant < CNdep);
+    
+    vector<int> groupC(groupA.size() + groupB.size());
+    sort(groupA.begin(), groupA.end());
+    sort(groupB.begin(), groupB.end());
+
+    vector<int>::iterator it = set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), groupC.begin());
+
+    groupC.resize(it - groupC.begin());
+    cout << "EM A " << groupA.size() << endl;
+    cout << "EM B " << groupC.size() << endl;
+    for (vector<int>::iterator i = groupC.begin(); i != groupC.end(); ++i)
+    {
+        int id = (*i);
+        //if(!id) continue; 
+        //cout << id << endl;
+    }
+
 }
 
 void Social_Graph_Adj_Matrix::partionate(){
@@ -244,15 +311,10 @@ void Social_Graph_Adj_Matrix::partionate(){
 
     double CNant, CNdep;
     do{
-        int tmp_eAA = eGroupA;
-        int tmp_eAB = eGroupAB;
+        IGraph::vertex * v = getVertex(Q.minIndex());
+        
         CNant = calcCNormalized(eGroupA, eGroupAB);
-        IGraph::vertex * v = getVertex(Q.minIndex());        
-
-        tmp_eAA += outGroup[v->id];
-        tmp_eAB += inGroup[v->id] - outGroup[v->id];
-       
-        CNdep = calcCNormalized(tmp_eAA, tmp_eAB);
+        CNdep = calcCNormalizedVertex(v->id);
 
         Q.deleteMin();
 
@@ -260,7 +322,7 @@ void Social_Graph_Adj_Matrix::partionate(){
             //cout << v->id << " : " << CNant << " < " << CNdep << endl;    
             putVertexInA(*v);
             groupA.push_back(v->id);
-            
+
             // spread the news to the neighbors
             for (IGraph::vertex::iterator e = v->begin(); e != v->end() ; ++e)
             {   
@@ -269,6 +331,7 @@ void Social_Graph_Adj_Matrix::partionate(){
                     Q.changeKey(u->id, Social_Graph_Adj_Matrix::rank(u->id));
                 }
             }
+            
         }
     }while(!Q.isEmpty() && CNant < CNdep);
     
@@ -279,12 +342,13 @@ void Social_Graph_Adj_Matrix::partionate(){
     vector<int>::iterator it = set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), groupC.begin());
 
     groupC.resize(it - groupC.begin());
-    cout << "EM B " << groupA.size() << endl;
+    cout << "EM A " << groupA.size() << endl;
+    cout << "EM B " << groupC.size() << endl;
     for (vector<int>::iterator i = groupC.begin(); i != groupC.end(); ++i)
     {
         int id = (*i);
         //if(!id) continue; 
-        cout << id << endl;
+        //cout << id << endl;
     }
 
 }
