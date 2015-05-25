@@ -196,8 +196,12 @@ void Social_Graph_Adj_Matrix::putVertexInA(IGraph::vertex &u){
 }
 
 inline double Social_Graph_Adj_Matrix::rank(int id){
+    double E = numEdges()/2;
+    return -inGroup[id] + outGroup[id];
     if(outGroup[id] != 0 && inGroup[id] != 0){
         return (double)outGroup[id]/(double)inGroup[id];
+        //return ((double)outGroup[id]/(double)inGroup[id]) - ((E - outGroup[id])/(E + (double)inGroup[id] -  outGroup[id]));
+        
     }else if(outGroup[id] == 0){
         return -100000000;
     }else if(inGroup[id] == 0){

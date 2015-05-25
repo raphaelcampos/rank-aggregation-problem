@@ -70,7 +70,7 @@ Social_Graph_Adj_Matrix * load_from_file(string filename){
 int main(int argc, char const *argv[])
 {
 	char * f = "instancia/inGA.txt";
-	Social_Graph_Adj_Matrix *graph = load_from_file(f);
+	Social_Graph_Adj_Matrix *graph = load_from_file(argv[1]);
 	
 	int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
 	for (int i = 0; i < 20; ++i)
@@ -82,7 +82,7 @@ int main(int argc, char const *argv[])
 
 	//delete [] graph;
 
-	Social_Graph_Adj_Matrix *graph1 = load_from_file(f);
+	Social_Graph_Adj_Matrix *graph1 = load_from_file(argv[1]);
 	srand(time(NULL));
 	//int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
 	for (int i = 0; i < 20; ++i)
