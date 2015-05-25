@@ -79,6 +79,7 @@ int main(int argc, char const *argv[])
 		graph->putVertexInA(*graph->getVertex(ids[i]));
 	}
 	graph->partion();
+	graph->loadSybils(argv[2]);
 
 	//delete [] graph;
 
@@ -92,6 +93,7 @@ int main(int argc, char const *argv[])
 	}
 	graph1->partionate();
 
+	cout << "Grau médio : " << graph->numEdges()/(2.0*graph->numVertices()) << endl;
 
 	//delete [] graph1;
 }

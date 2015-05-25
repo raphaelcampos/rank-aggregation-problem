@@ -6,6 +6,7 @@
 #include <iomanip>
 
 #include <vector>
+#include <set>
 
 #include "Graph_Adj_Matrix2.hpp"
 #include "IGraph.h"
@@ -77,6 +78,8 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
         double calcCNormalized(int eAA, int eAB);
         void putVertexInA(IGraph::vertex &v);
         inline double rank(int id);
+
+        void loadSybils(string filename, bool isOrdered = true);
     
     public:
         int *group;
@@ -84,8 +87,9 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
         int *outGroup;
         int eGroupA;
         int eGroupAB;
-        vector<int> groupA;
-        vector<int> groupB;
+        set<int> groupA;
+        set<int> groupB;
+        set<int> sybils;
 };
 
 Social_Graph_Adj_Matrix::Social_Graph_Adj_Matrix()
@@ -111,7 +115,7 @@ Social_Graph_Adj_Matrix::Social_Graph_Adj_Matrix(int n, int ini)
     for (int i = 0; i < numVertices(); ++i)
     {
         group[i] = GROUP_B;
-        groupB.push_back(i);
+        groupB.insert(i);
     }
 
     memset(outGroup, 0, sizeof(int)*numVertices());
@@ -245,10 +249,10 @@ void Social_Graph_Adj_Matrix::partion(){
     {
         int id = it->id;
         if(group[id] == GROUP_A){
-            groupA.push_back(it->id);
-            groupB.push_back(it->id);
+            groupA.insert(it->id);
+            groupB.insert(it->id);
         }else{
-            groupB.push_back(it->id);
+            groupB.insert(it->id);
             Q.insert(id, Social_Graph_Adj_Matrix::calcCNormalizedVertex(id));
         }
     }
@@ -265,7 +269,7 @@ void Social_Graph_Adj_Matrix::partion(){
         if(group[v->id] == GROUP_B && CNant < CNdep){
             //cout << v->id << " : " << CNant << " < " << CNdep << endl;    
             putVertexInA(*v);
-            groupA.push_back(v->id);
+            groupA.insert(v->id);
             
             for (int i = 0; i < numVertices(); ++i)
             {
@@ -277,21 +281,34 @@ void Social_Graph_Adj_Matrix::partion(){
         }
     }while(!Q.isEmpty() && CNant < CNdep);
     
-    vector<int> groupC(groupA.size() + groupB.size());
-    sort(groupA.begin(), groupA.end());
-    sort(groupB.begin(), groupB.end());
+    set<int> groupC;
+    //sort(groupA.begin(), groupA.end());
+    //sort(groupB.begin(), groupB.end());
 
-    vector<int>::iterator it = set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), groupC.begin());
+    set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), inserter(groupC, groupC.begin()));
 
-    groupC.resize(it - groupC.begin());
+    groupB = groupC;
+    //groupC.resize(it - groupC.begin());
     cout << "EM A " << groupA.size() << endl;
     cout << "EM B " << groupC.size() << endl;
-    for (vector<int>::iterator i = groupC.begin(); i != groupC.end(); ++i)
+    /*for (set<int>::iterator i = groupB.begin(); i != groupB.end(); ++i)
     {
         int id = (*i);
         //if(!id) continue; 
         //cout << id << endl;
-    }
+        
+    }*/
+
+    cout << "(a) Grau médio : " << numEdges()/(2.0*numVertices()) << endl;
+    cout << "(b) Modularidade : " << "" << endl;
+    cout << "(c) Condutancia Sybil : " << calcCNormalized(numEdges()/2.0 - eGroupA, eGroupAB) << endl;
+    cout << "(d) Condutancia Honesta : " << calcCNormalized(eGroupA, eGroupAB) << endl;
+    cout << "(e) Coef agrup Sybil : " << "" << endl;
+    cout << "(f) Coef agrup Honesta : " << "" << endl;
+    cout << "(g) Fracao sybil corretamente classif : " << "" << endl;
+    cout << "(h) Fracao honestos corretamente classif : " << numEdges()/(2.0*numVertices()) << endl;
+    cout << "(i) Fracao falso positivos : " << numEdges()/(2.0*numVertices()) << endl;
+    cout << "(j) Fracao falso negativos : " << numEdges()/(2.0*numVertices()) << endl;
 
 }
 
@@ -305,10 +322,10 @@ void Social_Graph_Adj_Matrix::partionate(){
     {
         int id = it->id;
         if(group[id] == GROUP_A){
-            groupA.push_back(it->id);
-            groupB.push_back(it->id);
+            groupA.insert(it->id);
+            groupB.insert(it->id);
         }else{
-            groupB.push_back(it->id);
+            groupB.insert(it->id);
             Q.insert(id, Social_Graph_Adj_Matrix::rank(id));
         }
     }
@@ -325,7 +342,7 @@ void Social_Graph_Adj_Matrix::partionate(){
         if(group[v->id] == GROUP_B && CNant < CNdep){
             //cout << v->id << " : " << CNant << " < " << CNdep << endl;    
             putVertexInA(*v);
-            groupA.push_back(v->id);
+            groupA.insert(v->id);
 
             // spread the news to the neighbors
             for (IGraph::vertex::iterator e = v->begin(); e != v->end() ; ++e)
@@ -339,16 +356,16 @@ void Social_Graph_Adj_Matrix::partionate(){
         }
     }while(!Q.isEmpty() && CNant < CNdep);
     
-    vector<int> groupC(groupA.size() + groupB.size());
-    sort(groupA.begin(), groupA.end());
-    sort(groupB.begin(), groupB.end());
+    set<int> groupC;
+    //sort(groupA.begin(), groupA.end());
+    //sort(groupB.begin(), groupB.end());
 
-    vector<int>::iterator it = set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), groupC.begin());
+    set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), inserter(groupC, groupC.begin()));
 
-    groupC.resize(it - groupC.begin());
+    //groupC.resize(it - groupC.begin());
     cout << "EM A " << groupA.size() << endl;
-    cout << "EM B " << groupC.size() << endl;
-    for (vector<int>::iterator i = groupC.begin(); i != groupC.end(); ++i)
+    cout << "EM B " << groupB.size() << endl;
+    for (set<int>::iterator i = groupB.begin(); i != groupB.end(); ++i)
     {
         int id = (*i);
         //if(!id) continue; 
@@ -368,4 +385,25 @@ IGraph::vertex * Social_Graph_Adj_Matrix::getVertex(int v){
 double Social_Graph_Adj_Matrix::getEdge(int v, int u){
     return Graph_Adj_Matrix::getEdge(v, u);
 }
+
+void Social_Graph_Adj_Matrix::loadSybils(string filename, bool isOrdered){
+    std::ifstream is(filename.c_str());
+    std::string str;
+
+    set<int>::iterator it = sybils.begin();
+    while(std::getline(is,str)) {
+        std::istringstream ss(str);
+        int i;
+
+        ss >> i;
+
+        if(isOrdered){
+            sybils.insert(it, i);
+            it++;
+        }else{
+            sybils.insert(i);
+        }
+    }
+}
+
 #endif 
