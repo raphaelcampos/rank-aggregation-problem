@@ -55,13 +55,17 @@ Social_Graph_Adj_Matrix * load_from_file(string filename){
 
     Social_Graph_Adj_Matrix *G = new Social_Graph_Adj_Matrix(nll.size());
     
+    int E = 0;
     for (int i = 0; i < nll.size(); ++i)
     {
     	for (int j = 1; j < nll[i].size(); ++j)
     	{
     		G->addEdge(nll[i][0], nll[i][j], 1);
+    		E++;
     	}
     }
+
+    cout << "E = "  << E << endl; 
 
     return G;
 
@@ -78,12 +82,13 @@ int main(int argc, char const *argv[])
 		//graph->putVertexInA(*graph->getVertex(rand()%100));
 		graph->putVertexInA(*graph->getVertex(ids[i]));
 	}
-	graph->partion();
 	graph->loadSybils(argv[2]);
+	graph->partion();
+	graph->printMetrics();
 
 	//delete [] graph;
 
-	Social_Graph_Adj_Matrix *graph1 = load_from_file(argv[1]);
+	/*Social_Graph_Adj_Matrix *graph1 = load_from_file(argv[1]);
 	srand(time(NULL));
 	//int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
 	for (int i = 0; i < 20; ++i)
@@ -95,5 +100,7 @@ int main(int argc, char const *argv[])
 
 	cout << "Grau médio : " << graph->numEdges()/(2.0*graph->numVertices()) << endl;
 
-	//delete [] graph1;
+	//delete [] graph1;*/
+
+	cout <<  "CALSS" << graph->calls << endl;
 }

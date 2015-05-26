@@ -19,42 +19,6 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
     public:
         enum { GROUP_A, GROUP_B };
 
-        class vertex : public Graph_Adj_Matrix::vertex
-        {
-            //friend Graph_Adj_Matrix;
-            typedef pair<double, IGraph::vertex*> ve;
-
-            public:
-                vertex()
-                :Graph_Adj_Matrix::vertex(){
-                    init();
-                }
-                vertex(int n)
-                :Graph_Adj_Matrix::vertex(){
-                    init();
-                    for (int j = 0; j < n; ++j)
-                    {
-                        pair<double, vertex*> adj;
-                        adj.first = 0;
-                        adj.second = NULL;
-                        
-                        this->adj.push_back(adj);
-                    }
-                }
-
-            private:
-                void init(){
-                    inGroup = 0;
-                    outGroup = 0;
-                    group = GROUP_B;
-                }
-
-            public:
-                vector<ve> adj;
-                int inGroup;
-                int outGroup;
-                int group;
-         };
 
         Social_Graph_Adj_Matrix();
         Social_Graph_Adj_Matrix(const Social_Graph_Adj_Matrix &);
@@ -76,11 +40,17 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
         void partionate();
         double calcCNormalizedVertex(int v);
         double calcCNormalized(int eAA, int eAB);
+
+        double clusteringCoefficient(const set<int> &V);
+        double modularity();
+
         void putVertexInA(IGraph::vertex &v);
         inline double rank(int id);
 
         void loadSybils(string filename, bool isOrdered = true);
     
+        void printMetrics();
+
     public:
         int *group;
         int *inGroup;
@@ -144,8 +114,8 @@ void Social_Graph_Adj_Matrix::addEdge(int v, int u, double w){
     IGraph::vertex *sv = (IGraph::vertex*)getVertex(v);
     IGraph::vertex *su = (IGraph::vertex*)getVertex(u);
 
-    if(Graph_Adj_Matrix::edgeExists(v, u) || Graph_Adj_Matrix::edgeExists(u, v)){
-        Graph_Adj_Matrix::addEdge(v, u, w);
+    if(Graph_Adj_Matrix::edgeExists(v, u)){
+        //Graph_Adj_Matrix::addEdge(v, u, w);
         return;
     }
 
@@ -245,6 +215,7 @@ void Social_Graph_Adj_Matrix::partion(){
     groupB.clear();
     groupA.clear();
 
+    // O(Vlg(V))
     for (IGraph::vertex_iterator it = begin(); it != end(); ++it)
     {
         int id = it->id;
@@ -252,11 +223,14 @@ void Social_Graph_Adj_Matrix::partion(){
             groupA.insert(it->id);
             groupB.insert(it->id);
         }else{
-            groupB.insert(it->id);
-            Q.insert(id, Social_Graph_Adj_Matrix::calcCNormalizedVertex(id));
+            groupB.insert(it->id); // log(v)
+            Q.insert(id, Social_Graph_Adj_Matrix::calcCNormalizedVertex(id)); // log(v)
         }
     }
 
+    //
+    // V²logV + O(Vlog(V)) + O(E)
+    //
     double CNant, CNdep;
     do{
         IGraph::vertex * v = getVertex(Q.minIndex());
@@ -264,12 +238,12 @@ void Social_Graph_Adj_Matrix::partion(){
         CNant = calcCNormalized(eGroupA, eGroupAB);
         CNdep = calcCNormalizedVertex(v->id);
 
-        Q.deleteMin();
+        Q.deleteMin(); // O(log(v))
 
         if(group[v->id] == GROUP_B && CNant < CNdep){
             //cout << v->id << " : " << CNant << " < " << CNdep << endl;    
             putVertexInA(*v);
-            groupA.insert(v->id);
+            groupA.insert(v->id); // O(log(v))
             
             for (int i = 0; i < numVertices(); ++i)
             {
@@ -280,36 +254,6 @@ void Social_Graph_Adj_Matrix::partion(){
             }
         }
     }while(!Q.isEmpty() && CNant < CNdep);
-    
-    set<int> groupC;
-    //sort(groupA.begin(), groupA.end());
-    //sort(groupB.begin(), groupB.end());
-
-    set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), inserter(groupC, groupC.begin()));
-
-    groupB = groupC;
-    //groupC.resize(it - groupC.begin());
-    cout << "EM A " << groupA.size() << endl;
-    cout << "EM B " << groupC.size() << endl;
-    /*for (set<int>::iterator i = groupB.begin(); i != groupB.end(); ++i)
-    {
-        int id = (*i);
-        //if(!id) continue; 
-        //cout << id << endl;
-        
-    }*/
-
-    cout << "(a) Grau médio : " << numEdges()/(2.0*numVertices()) << endl;
-    cout << "(b) Modularidade : " << "" << endl;
-    cout << "(c) Condutancia Sybil : " << calcCNormalized(numEdges()/2.0 - eGroupA, eGroupAB) << endl;
-    cout << "(d) Condutancia Honesta : " << calcCNormalized(eGroupA, eGroupAB) << endl;
-    cout << "(e) Coef agrup Sybil : " << "" << endl;
-    cout << "(f) Coef agrup Honesta : " << "" << endl;
-    cout << "(g) Fracao sybil corretamente classif : " << "" << endl;
-    cout << "(h) Fracao honestos corretamente classif : " << numEdges()/(2.0*numVertices()) << endl;
-    cout << "(i) Fracao falso positivos : " << numEdges()/(2.0*numVertices()) << endl;
-    cout << "(j) Fracao falso negativos : " << numEdges()/(2.0*numVertices()) << endl;
-
 }
 
 void Social_Graph_Adj_Matrix::partionate(){
@@ -404,6 +348,93 @@ void Social_Graph_Adj_Matrix::loadSybils(string filename, bool isOrdered){
             sybils.insert(i);
         }
     }
+}
+
+void Social_Graph_Adj_Matrix::printMetrics(){
+    set<int> honests;
+    set<int> result;
+    
+    set_difference(groupB.begin(),groupB.end(),sybils.begin(),sybils.end(), inserter(honests, honests.begin()));
+
+    result.clear();
+    set_difference(groupB.begin(),groupB.end(),groupA.begin(),groupA.end(), inserter(result, result.begin()));
+
+    groupB = result;
+    //groupC.resize(it - groupC.begin());
+    cout << "EM A " << groupA.size() << endl;
+    cout << "EM B " << groupB.size() << endl;
+
+    result.clear();
+    set_intersection(groupB.begin(),groupB.end(),sybils.begin(),sybils.end(), inserter(result, result.begin()));
+
+    double fscc = result.size()/(double)sybils.size();
+
+    result.clear();
+    set_intersection(groupA.begin(),groupA.end(), honests.begin(), honests.end(), inserter(result, result.begin()));
+    double fhcc = result.size()/(double)honests.size();
+    
+    cout << "(a) Grau médio : " << numEdges()/((double)numVertices()) << endl;
+    cout << "(b) Modularidade : " << modularity() << endl;
+    cout << "(c) Condutancia Sybil : " << calcCNormalized(numEdges()/2.0 - eGroupA, eGroupAB) << endl;
+    cout << "(d) Condutancia Honesta : " << calcCNormalized(eGroupA, eGroupAB) << endl;
+    cout << "(e) Coef agrup Sybil : " << clusteringCoefficient(groupB) << endl;
+    cout << "(f) Coef agrup Honesta : " << clusteringCoefficient(groupA) << endl;
+    cout << "(g) Fracao sybil corretamente classif : " << fscc << endl;
+    cout << "(h) Fracao honestos corretamente classif : " << fhcc << endl;
+    cout << "(i) Fracao falso positivos : " << 1 - fhcc << endl;
+    cout << "(j) Fracao falso negativos : " << 1 - fscc << endl;
+}
+
+/**
+ * O(V³)
+ * @param  V [description]
+ * @return   [description]
+ */
+double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
+    double sum = 0;
+    
+    for (set<int>::iterator i = V.begin(); i != V.end(); ++i)
+    {
+        int numEdges = 0;
+        double coef = 0;
+
+        for (set<int>::iterator j = V.begin(); j != V.end(); ++j)
+        {
+            if(i == j) continue;
+            if(!edgeExists(*i,*j) || !edgeExists(*j,*i)) continue;
+            for (set<int>::iterator k = V.begin(); k != V.end(); ++k)
+            {
+                if(edgeExists(*j, *k) && edgeExists(*k, *i) && edgeExists(*i, *k)) numEdges+=2;
+            }
+        }
+        coef = numEdges/(double)(inGroup[*i]*(inGroup[*i]-1));
+        sum += coef;
+    }
+
+
+    int numEdges = 0;
+    for (set<int>::iterator i = V.begin(); i != V.end(); ++i)
+    {   
+        numEdges += inGroup[*i];
+    }
+    cout << numEdges/(double)(V.size()*(V.size()-1)) << endl;
+
+    return sum/groupB.size();
+
+}
+
+double Social_Graph_Adj_Matrix::modularity(){
+    double mA, mB, ls, ds, L = numEdges()/2.0;
+    
+    ls = eGroupA; // number of edges in A
+    ds = (2*eGroupA) + eGroupAB;
+    mA = (ls/L) - pow(ds/(2*L),2.0);
+
+    ls = numEdges()/2 - eGroupA - eGroupAB; // number of edges in B
+    ds = numEdges() - (2*eGroupA + eGroupAB);
+    mB = (ls/L) - pow(ds/(2*L),2.0);
+
+    return mA + mB;
 }
 
 #endif 

@@ -11,7 +11,9 @@
 
 using namespace std;
 
-class Graph_Adj_Matrix : public IGraph { 
+class Graph_Adj_Matrix : public IGraph {
+    public:
+        int calls;
     public:
         class vertex : public IGraph::vertex
         {
@@ -169,7 +171,9 @@ Graph_Adj_Matrix::Graph_Adj_Matrix(const Graph_Adj_Matrix & g){
 }
 
 Graph_Adj_Matrix::Graph_Adj_Matrix(int n, int ini, bool directed){
+    calls = 0;
     this->n = n;
+    this->m = 0;
     
     for (int i = 0; i < n; ++i)
     {
@@ -198,6 +202,8 @@ void Graph_Adj_Matrix::updateEdgeWeight(int v, int u, double w){
 
 void Graph_Adj_Matrix::addEdge(int v, int u, double w){
     if(Graph_Adj_Matrix::edgeExists(v, u)) return Graph_Adj_Matrix::updateEdgeWeight(v, u, w);
+
+    calls++;
 
     if(Graph_Adj_Matrix::vertexExists(v) && Graph_Adj_Matrix::vertexExists(u)){
         
@@ -267,7 +273,7 @@ int Graph_Adj_Matrix::numVertices(){
     return vertices.size();
 }
 
-int Graph_Adj_Matrix::numEdges(){
+int Graph_Adj_Matrix::numEdges(){ 
     return m;
 }
 
