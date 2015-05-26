@@ -43,6 +43,7 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
 
         double clusteringCoefficient(const set<int> &V);
         double modularity();
+        double mixingTime();
 
         void putVertexInA(IGraph::vertex &v);
         inline double rank(int id);
@@ -383,6 +384,8 @@ void Social_Graph_Adj_Matrix::printMetrics(){
     cout << "(h) Fracao honestos corretamente classif : " << fhcc << endl;
     cout << "(i) Fracao falso positivos : " << 1 - fhcc << endl;
     cout << "(j) Fracao falso negativos : " << 1 - fscc << endl;
+
+    mixingTime();
 }
 
 /**
@@ -435,6 +438,59 @@ double Social_Graph_Adj_Matrix::modularity(){
     mB = (ls/L) - pow(ds/(2*L),2.0);
 
     return mA + mB;
+}
+
+double Social_Graph_Adj_Matrix::mixingTime(){
+    int n = this->numVertices();
+    double **P = new double*[n];
+    double *pi = new double[n];
+    bool *seen = new bool[n];
+    for (IGraph::vertex_iterator u = this->begin(); u != this->end(); ++u)
+    {
+        P[u->id] = new double[n];
+        memset(P[u->id], 0, sizeof(double)*n);
+        pi[u->id] = u->outdegree/(2.0*numEdges());
+        seen[u->id] = false;
+
+        for (IGraph::vertex::iterator e = u->begin(); e != u->end(); ++e)
+        {
+            IGraph::vertex * v = e->second;
+            P[u->id][v->id] = 1.0/(u->outdegree);
+            //cout << u->id<< ":" <<v->id << " " << P[u->id][v->id] << " ";
+        }
+        //cout << endl;
+    }
+
+    for (int i = 0; i < n; ++i)
+    {
+        //cout << pi[i] << " ";
+        if(seen[i]) cout << "visto :" << i << endl;
+    }
+
+    cout << endl;
+    srand(time(NULL));
+
+    IGraph::vertex *t = getVertex(rand()%n);
+    int steps = 0;
+    //cout << t->id << endl;
+    // random walking
+    while(!seen[t->id]){
+        cout << t->id << endl;
+        seen[t->id] = true;
+        int neigh = rand()%t->outdegree;
+        
+        cout << "neigh : " << neigh << endl;
+        int i = 0;
+        for (IGraph::vertex::iterator e = t->begin(); e != t->end() && i <= neigh; ++e, i++)
+        {
+            t = e->second;
+        }
+        
+        steps++;
+    }
+
+    cout << steps << " <= " << log10(n) << endl;
+
 }
 
 #endif 
