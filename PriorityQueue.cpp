@@ -9,7 +9,7 @@ using namespace std;
 
 template<
     typename key_type,
-    typename comparer_type = std::greater<key_type>
+    typename comparer_type
 >
 class IndexedPriorityQueue {
     int NMAX, N, *heap, *index;

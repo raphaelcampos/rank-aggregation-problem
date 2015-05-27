@@ -212,7 +212,7 @@ double Social_Graph_Adj_Matrix::calcCNormalizedVertex(int v){
 
 void Social_Graph_Adj_Matrix::partion(){
     typedef pair<double, IGraph::vertex*> item;
-    IndexedPriorityQueue<double> Q(numVertices());
+    IndexedPriorityQueue<double, std::greater<double> > Q(numVertices());
     groupB.clear();
     groupA.clear();
 
@@ -259,7 +259,7 @@ void Social_Graph_Adj_Matrix::partion(){
 
 void Social_Graph_Adj_Matrix::partionate(){
     typedef pair<double, IGraph::vertex*> item;
-    IndexedPriorityQueue<double> Q(numVertices());
+    IndexedPriorityQueue<double, std::greater<double> > Q(numVertices());
     groupB.clear();
     groupA.clear();
 
@@ -376,7 +376,7 @@ void Social_Graph_Adj_Matrix::printMetrics(){
     
     cout << "(a) Grau médio : " << numEdges()/((double)numVertices()) << endl;
     cout << "(b) Modularidade : " << modularity() << endl;
-    cout << "(c) Condutancia Sybil : " << calcCNormalized(numEdges()/2.0 - eGroupA, eGroupAB) << endl;
+    cout << "(c) Condutancia Sybil : " << calcCNormalized(numEdges()/2.0 - eGroupA - eGroupAB, eGroupAB) << endl;
     cout << "(d) Condutancia Honesta : " << calcCNormalized(eGroupA, eGroupAB) << endl;
     cout << "(e) Coef agrup Sybil : " << clusteringCoefficient(groupB) << endl;
     cout << "(f) Coef agrup Honesta : " << clusteringCoefficient(groupA) << endl;
@@ -430,12 +430,17 @@ double Social_Graph_Adj_Matrix::modularity(){
     double mA, mB, ls, ds, L = numEdges()/2.0;
     
     ls = eGroupA; // number of edges in A
-    ds = (2*eGroupA) + eGroupAB;
-    mA = (ls/L) - pow(ds/(2*L),2.0);
-
-    ls = numEdges()/2 - eGroupA - eGroupAB; // number of edges in B
-    ds = numEdges() - (2*eGroupA + eGroupAB);
-    mB = (ls/L) - pow(ds/(2*L),2.0);
+    ds = (2.0*eGroupA) + eGroupAB;
+    mA = (ls/L) - (ds/(2.0*L))*(ds/(2.0*L));
+    //cout << "ls : " << ls << " ds : " << ds << " mA : " << mA << endl;   
+    
+    ls = 0;
+    ds = 0;
+    ls = L - eGroupA - eGroupAB; // number of edges in B
+    ds = 2*ls + eGroupAB;
+    mB = ((ls)/L) - (ds/(2.0*L))*(ds/(2.0*L));
+    
+    //cout << "ls : " << ls << " ds : " << ds << " mB : " << mB << endl;   
 
     return mA + mB;
 }
