@@ -18,6 +18,7 @@
 #include "Graph_Search.cpp"
 #include "Graph_Minimum_Spanning_Tree.cpp"
 #include "Single_Source_Shortest_Path.cpp"
+#include "Graph_Feedback_Arc_Set.cpp"
 
 using namespace std;
 
@@ -293,13 +294,13 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 				int u = (int)ranks[i][j] - ((int)'A');
 				int v = (int)ranks[i][l] - ((int)'A');
 
-				g->addEdge(u, v,  g->getEdge(u, v) + 1);
+				g->addEdge(u, v,  g->getEdge(u, v) + 1.0/rs);
 				
 			}
 		}
 	}
 
-	IGraph *gmst = new Graph_Adj_Matrix(8);
+	/*IGraph *gmst = new Graph_Adj_Matrix(8);
 	IGraph::vertex * s = &(*gmst->begin());
 	
 	// A
@@ -338,20 +339,18 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 	MST_prim(*gmst, *s);
 	graph::dijkstra(*gmst, *s);
 	graph::bellman_ford(*gmst, *s);
-
+	*/
 	IGraph * tour = new Graph_Adj_Matrix(g->numVertices());
-
+	IGraph * wTour = new Graph_Adj_Matrix(g->numVertices());
+	
 	complete2Tournament(*g, *tour);
 
-	s = &(*tour->begin());
-	//BFS(*tour, *s);
-
-	DFS(*tour, *s);
-	s = &(*(tour->begin()++));
-	DFS(*tour, *s);
-
-	//cout << (int)((Graph_Adj_Matrix*)tour)->thereIsUniversalSink() << endl;
-	((Graph_Adj_Matrix*)tour)->printAsMatrix();
+	complete2Tournament(*g, *wTour, false);
+	
+	cout << "WEIGHTED : " << endl;
+	((Graph_Adj_Matrix*)wTour)->printAsMatrix();
+	/*cout << "UNWEIGHTED : " << endl;
+	((Graph_Adj_Matrix*)tour)->printAsMatrix();*/
 
 	return tour;
 }
@@ -474,7 +473,7 @@ int main(int argc, char const *argv[])
 
 	srand(time(NULL));
 	
-	int count = 3;
+	int count = 20;
 	int k = 8; // top-k rank
 	map<char, int> *ranks = new map<char, int>[count];
 	char **ranks_arr = new char*[count];
@@ -547,7 +546,12 @@ int main(int argc, char const *argv[])
 	print_rank(rank_heuI);
 	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heuI, ranks, count) << endl;
 
-	
+	cout << "FAS-pivot" << endl;
+	int * FAS = graph::feedback_arc_set_pivot(*graph);
+	map<char, int> rank_heuFAS = rank_from_array( FAS, cl);
+	print_rank(rank_heuFAS);
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, count) << endl;
+
 	char * rh = hamiltonian_path_tournament(G, outdegree, cl);
 	
 	print_array(rh, cl);

@@ -1,6 +1,7 @@
+#include <cmath>
 #include "IGraph.h"
 
-void complete2Tournament(IGraph &comp, IGraph &tour){
+void complete2Tournament(IGraph &comp, IGraph &tour, bool unweighted = true){
 
 	//if(comp.isComplete()){
 	//	cout << "complete2Tournament" << endl;
@@ -10,10 +11,12 @@ void complete2Tournament(IGraph &comp, IGraph &tour){
 					double w1 = comp.getEdge(v->id, u->second->id);
 					double w2 = comp.getEdge(u->second->id, v->id);
 					
+					double wVal = (unweighted)? 1 : abs(w1 - w2); 
+
 					if(w1 > w2)
-						tour.addEdge(v->id, u->second->id, 1);
+						tour.addEdge(v->id, u->second->id, (unweighted)? 1 : w1);
 					else
-						tour.addEdge(u->second->id, v->id, 1);
+						tour.addEdge(u->second->id, v->id, (unweighted)? 1 : w2);
 				}
 			}
 		}
