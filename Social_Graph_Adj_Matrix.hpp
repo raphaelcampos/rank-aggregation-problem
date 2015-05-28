@@ -116,7 +116,6 @@ void Social_Graph_Adj_Matrix::addEdge(int v, int u, double w){
     IGraph::vertex *su = (IGraph::vertex*)getVertex(u);
 
     if(Graph_Adj_Matrix::edgeExists(v, u)){
-        //Graph_Adj_Matrix::addEdge(v, u, w);
         return;
     }
 
@@ -385,7 +384,7 @@ void Social_Graph_Adj_Matrix::printMetrics(){
     cout << "(i) Fracao falso positivos : " << 1 - fhcc << endl;
     cout << "(j) Fracao falso negativos : " << 1 - fscc << endl;
 
-    mixingTime();
+    //mixingTime();
 }
 
 /**
@@ -407,10 +406,10 @@ double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
             if(!edgeExists(*i,*j) || !edgeExists(*j,*i)) continue;
             for (set<int>::iterator k = V.begin(); k != V.end(); ++k)
             {
-                if(edgeExists(*j, *k) && edgeExists(*k, *i) && edgeExists(*i, *k)) numEdges+=2;
+                if(edgeExists(*j, *k) && edgeExists(*k, *i) && edgeExists(*i, *k)) numEdges++;
             }
         }
-        coef = numEdges/(double)(inGroup[*i]*(inGroup[*i]-1));
+        coef = 2*numEdges/(double)(inGroup[*i]*(inGroup[*i]-1));
         sum += coef;
     }
 

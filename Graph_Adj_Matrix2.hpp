@@ -174,7 +174,7 @@ Graph_Adj_Matrix::Graph_Adj_Matrix(int n, int ini, bool directed){
     calls = 0;
     this->n = n;
     this->m = 0;
-    this->directed = true;
+    this->directed = directed;
     
     for (int i = 0; i < n; ++i)
     {
@@ -216,9 +216,7 @@ void Graph_Adj_Matrix::addEdge(int v, int u, double w){
         vertices[v].adj[u].second->indegree++;
         
         m++;
-
         if(!this->directed){
-            cout << "ass" << endl;
             Graph_Adj_Matrix::addEdge(u, v, w);
         }
     }
