@@ -377,8 +377,8 @@ void Social_Graph_Adj_Matrix::printMetrics(){
     
     cout << "(a) Grau médio : " << numEdges()/((double)numVertices()) << endl;
     cout << "(b) Modularidade : " << modularity() << endl;
-    cout << "(c) Condutancia Sybil : " << calcCNormalized(numEdges()/2.0 - eGroupA - eGroupAB, eGroupAB) << endl;
-    cout << "(d) Condutancia Honesta : " << calcCNormalized(eGroupA, eGroupAB) << endl;
+    cout << "(c) Condutancia Sybil : " << eGroupAB/(numEdges()/2.0 - eGroupA - eGroupAB)/*calcCNormalized(numEdges()/2.0 - eGroupA - eGroupAB, eGroupAB)*/ << endl;
+    cout << "(d) Condutancia Honesta : " << (double)eGroupAB/eGroupA/*calcCNormalized(eGroupA, eGroupAB)*/ << endl;
     cout << "(e) Coef agrup Sybil : " << clusteringCoefficient(groupB) << endl;
     cout << "(f) Coef agrup Honesta : " << clusteringCoefficient(groupA) << endl;
     cout << "(g) Fracao sybil corretamente classif : " << fscc << endl;
@@ -405,10 +405,10 @@ double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
         for (set<int>::iterator j = V.begin(); j != V.end(); ++j)
         {
             if(i == j) continue;
-            if(!edgeExists(*i,*j) || !edgeExists(*j,*i)) continue;
+            if(!edgeExists(*i,*j)) continue;
             for (set<int>::iterator k = V.begin(); k != V.end(); ++k)
             {
-                if(edgeExists(*j, *k) && edgeExists(*k, *i) && edgeExists(*i, *k)) numEdges++;
+                if(edgeExists(*j, *k) && edgeExists(*k, *i)) numEdges++;
             }
         }
         total += inGroup[*i];
@@ -437,6 +437,7 @@ double Social_Graph_Adj_Matrix::modularity(){
 }
 
 double Social_Graph_Adj_Matrix::mixingTime(){
+    typedef std::map<unsigned long, double> sample;
     int n = this->numVertices();
     matrix<double> P = zeros_matrix<double>(n,n);
     matrix<double> ds(1, n);
@@ -445,26 +446,27 @@ double Social_Graph_Adj_Matrix::mixingTime(){
     bool *seen = new bool[n];
     for (IGraph::vertex_iterator u = this->begin(); u != this->end(); ++u)
     {
+
         ds(0, u->id) = u->outdegree/((double)numEdges());
         iD(0, u->id) = 1.0/n;
         seen[u->id] = false;
-
+        sample samp;
         for (IGraph::vertex::iterator e = u->begin(); e != u->end(); ++e)
         {
             IGraph::vertex * v = e->second;
             P(u->id, v->id) = 1.0/(u->outdegree);
             //cout << u->id<< ":" <<v->id << " " << P[u->id][v->id] << " ";
         }
+
         //cout << endl;
     }
     matrix<double> Pt = P;
-    //cout << ds << endl;
 
     int t = 0;
     
-    double epslon = 10e-2;
+    double epslon = 10e-3;
     double maxi = 1;
-
+    
     matrix<double> eigenvector = real_eigenvalues(P);
     std::sort(&eigenvector(0), &eigenvector(0)+eigenvector.size());
     cout << eigenvector << endl;
@@ -472,9 +474,9 @@ double Social_Graph_Adj_Matrix::mixingTime(){
     cout << "MI : " << mi << endl;
     cout << "upper bound : " << (log(n) + log(1/epslon))/(1-mi) << endl;
     cout << "lower bound : " << (mi/(2-2*mi))*log(1/(2*epslon)) << endl;
-    return 10;
+    
     while(maxi = max(delta)){
-        cout << maxi << endl;
+        //cout << maxi << endl;
         if(maxi < epslon) break;
 
         for (int i = 0; i < n; ++i)
@@ -488,7 +490,7 @@ double Social_Graph_Adj_Matrix::mixingTime(){
 
         Pt = Pt * P;
         t++;
-        cout << t << " ";
+        //cout << t << " ";
     }
 
 

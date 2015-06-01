@@ -5,9 +5,12 @@ void complete2Tournament(IGraph &comp, IGraph &tour, bool unweighted = true){
 
 	//if(comp.isComplete()){
 	//	cout << "complete2Tournament" << endl;
+	cout << "creating tour" << endl;
 		for (IGraph::vertex_iterator v = comp.begin(); v != comp.end(); v++){
+			cout << v->id << " ";
 			for (IGraph::vertex::iterator u = v->begin(); u != v->end(); u++){
 				if(!(tour.edgeExists(v->id,u->second->id) || tour.edgeExists(u->second->id, v->id))){
+					cout << u->second->id << endl;
 					double w1 = comp.getEdge(v->id, u->second->id);
 					double w2 = comp.getEdge(u->second->id, v->id);
 					
@@ -28,6 +31,68 @@ void complete2Tournament(IGraph &comp, IGraph &tour, bool unweighted = true){
 }
 
 int * hamiltonPathForTournament(IGraph &tour){
+	enum {BLACK, WHITE, GRAY};
+
+	int * path = new int[tour.numVertices()];
+	int * color = new int[tour.numVertices()];
+
+	queue< IGraph::vertex* > Q;
+	int n = tour.numVertices();
+
+	int min = 100000;
+	IGraph::vertex * u = NULL;
+	for (IGraph::vertex_iterator it = tour.begin(); it != tour.end(); it++)
+	{
+		color[it->id] = WHITE;
+		if(min > it->indegree){
+			min = it->indegree;
+			u = &(*it);
+		}
+	}
+
+	color[u->id] = GRAY;
+	Q.push(u);
+	int i = 0;	
+	while(!Q.empty()){
+		u = Q.front();
+		Q.pop();
+		
+		cout << u->id << " in : " << u->indegree << " out : " << u->outdegree << endl;
+
+		int min = 100000;
+		IGraph::vertex * s = NULL;
+		for (IGraph::vertex::iterator e = u->begin(); e != u->end(); ++e)
+		{
+			IGraph::vertex *v = e->second;
+			if(color[v->id] == WHITE){
+				v->indegree--;
+				
+				if(min > v->indegree){
+					min = v->indegree;	
+					s = &(*v);
+				}
+			}
+		}
+		if(s != NULL){
+			color[s->id] = GRAY;
+			Q.push(s);
+		}
+
+		color[u->id] = BLACK;
+		path[i] = u->id;
+		i++;
+	}
+
+	cout << "BRANC " << WHITE << endl;
+	for (int i = 0; i < n; ++i)
+	{
+		cout << path[i] << endl;
+	}
+
+	return path;
+}
+
+/*int * hamiltonPathForTournament(IGraph &tour){
 	int * path = new int[tour.numVertices()];
 
 	int n = tour.numVertices(); 
@@ -75,7 +140,7 @@ int * hamiltonPathForTournament(IGraph &tour){
 	}
 
 	return path;
-}
+}*/
 
 int tour_ham_merge_and_count(IGraph &tour, int *A, int *buffer, int ini, int fim, int meio){
 

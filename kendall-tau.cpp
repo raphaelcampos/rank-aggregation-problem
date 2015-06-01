@@ -101,7 +101,7 @@ int sort_and_count(int A[], int buffer[], int ini, int fim){
 map<char, int> rank_from_array(int a[], int n){
 	std::map<char, int> rank;
 	for (int i = 0; i < n; ++i)
-	{
+	{	
 		rank[(char)'A' + a[i]] = i + 1;
 	}
 	return rank;
@@ -300,24 +300,42 @@ class GreaterOutDegree
  * @param  cl    [description]
  * @return       [description]
  */
-IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
+IGraph * create_majority_graph(char * ranks[], int rs, int m, int cl){
 
 	IGraph *g = new Graph_Adj_Matrix(cl);
+	bool *showed = new bool[cl];
 
+	//O(km²)
 	for (int i = 0; i < rs; ++i)
 	{
-		for (int j = 0; j < k; ++j)
+		memset(showed, 0, sizeof(bool)*cl);
+		for (int j = 0; j < m; ++j)
 		{
-			for (int l = j + 1; l < k; ++l)
+			for (int l = j + 1; l < m; ++l)
 			{	
 				int u = (int)ranks[i][j] - ((int)'A');
 				int v = (int)ranks[i][l] - ((int)'A');
 
 				g->addEdge(u, v,  g->getEdge(u, v) + 1.0/rs);
-				
+				showed[u] = true;
+				showed[v] = true;
 			}
 		}
+		if(m < cl){
+			for (int v = 0; v < cl; ++v)
+			{
+				if(!showed[v]){
+					for (int u = 0; u < cl; ++u)
+					{
+						if(u != v)
+							g->addEdge(u, v,  g->getEdge(u, v) + 1.0/rs);
+					}
+				}
+			}
+		}		
 	}
+	cout << "graph created" << endl;
+	((Graph_Adj_Matrix*)g)->printAsMatrix();
 
 	/*IGraph *gmst = new Graph_Adj_Matrix(8);
 	IGraph::vertex * s = &(*gmst->begin());
@@ -359,12 +377,12 @@ IGraph * create_majority_graph(char * ranks[], int rs, int k, int cl){
 	graph::dijkstra(*gmst, *s);
 	graph::bellman_ford(*gmst, *s);
 	*/
-	IGraph * tour = new Graph_Adj_Matrix(g->numVertices());
+	IGraph * tour = new Graph_Adj_Matrix(cl);
 	IGraph * wTour = new Graph_Adj_Matrix(g->numVertices());
-	
+	cout << "instance" << endl; 
 	complete2Tournament(*g, *tour);
 
-	complete2Tournament(*g, *wTour, false);
+	//complete2Tournament(*g, *wTour, false);
 	
 	cout << "WEIGHTED : " << endl;
 	((Graph_Adj_Matrix*)wTour)->printAsMatrix();
@@ -492,29 +510,31 @@ int main(int argc, char const *argv[])
 
 	srand(time(NULL));
 	
-	int count = 20;
-	int k = 8; // top-k rank
-	map<char, int> *ranks = new map<char, int>[count];
-	char **ranks_arr = new char*[count];
+	int k = 6; // number of list
+	int n = 6;  // number of candidates
+	int m = n; // top-m rank
+
+	map<char, int> *ranks = new map<char, int>[k];
+	char **ranks_arr = new char*[k];
 	map<char, int> opt;
 	
-	double *sum_dist = new double[count];
-	memset(sum_dist, 0, sizeof(double)*count);
+	double *sum_dist = new double[k];
+	memset(sum_dist, 0, sizeof(double)*k);
 	
 	
-	for (int i = 0; i < count; ++i)
+	for (int i = 0; i < k; ++i)
 	{
 		
-		ranks_arr[i] = new char[k];
-	 	ranks[i] = gen_rank(1, k, k, ranks_arr[i]);
-	 	//cout << ranks_arr[i] << endl;
+		ranks_arr[i] = new char[m];
+	 	ranks[i] = gen_rank(1, n, m, ranks_arr[i]);
+	 	cout << ranks_arr[i] << endl;
 	}
 
     cout << "Gen all..." <<endl;
 
-	for (int i = 0; i < count; ++i)
+	for (int i = 0; i < k; ++i)
 	{
-		for (int j = i+1; j < count; ++j)
+		for (int j = i+1; j < k; ++j)
 		{
 			double dist = kendall_dist(ranks[i], ranks[j]);
 			sum_dist[i] += dist;
@@ -525,7 +545,7 @@ int main(int argc, char const *argv[])
 	}
 
 	int min_dist = 0;
-	for (int i = 1; i < count; ++i)
+	for (int i = 1; i < k; ++i)
 	{
 		//print_rank(ranks[i]);
 		//cout << "Sum Kendall rank(" << i + 1 << ") : " << sum_dist[i] << endl;
@@ -535,14 +555,14 @@ int main(int argc, char const *argv[])
 	}
 
 	print_rank(ranks[min_dist]);
-	cout << "Sum Kendall rank(" << min_dist + 1 << ") : " << sum_dist[min_dist]/count << endl;
+	cout << "Sum Kendall rank(" << min_dist + 1 << ") : " << sum_dist[min_dist]/k << endl;
 
 	int cl;
-	char *c = union_all(ranks, count, cl);
+	char *c = union_all(ranks, k, cl);
 	cout << "size : " << cl << endl;
 	print_array(c, cl);
 	cout << "OPTIMAL :: " << endl;
-	opt = kemeny_consensus(c, cl, ranks, count);
+	opt = kemeny_consensus(c, cl, ranks, k);
 	int * out = new int[cl];
 	for (map<char, int>::iterator i = opt.begin(); i != opt.end(); ++i)
 	{
@@ -550,58 +570,73 @@ int main(int argc, char const *argv[])
 		out[i->second-1] = (int) i->first - 'A';
 	}
 	print_rank(opt);
-	cout << "Sum Kendall rank(optimal) : " << _kemeny_rule(opt, ranks, count) << endl;
-
-	
+	cout << "Sum Kendall rank(optimal) : " << _kemeny_rule(opt, ranks, k) << endl;
 
 	cout << "Heuristic :: " << endl;
 
-	int **G = new int*[cl];
+	/*int **G = new int*[cl];
 	for (int i = 0; i < cl; ++i)
 	{
 		G[i] = new int[cl];
 		memset(G[i], 0, sizeof(int)*cl);
-	}
+	}*/
 
-	pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
-	IGraph * graph = create_majority_graph(ranks_arr, count, k, cl);
-	int* igr = DVhamiltonPathForTournament(*graph);
+	//pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
+	IGraph * graph = create_majority_graph(ranks_arr, k, m, cl);
 
+	((Graph_Adj_Matrix*)graph)->printAsMatrix();
 	cout << "Optimal with locally Kemenysation" << endl;
+	print_array(out, cl);
 	DVhamiltonPathForTournament(*graph, out);
+	print_array(out, cl);
 	opt = rank_from_array( out, cl);
 	print_rank(opt);
-	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(opt, ranks, count) << endl;
+	cout << "Sum Kendall rank(optimal with locally Kemenysation) : " << _kemeny_rule(opt, ranks, k) << endl;
+
 
 	cout <<  "aqui : " ;
+	int* igr = DVhamiltonPathForTournament(*graph);
 	print_array(igr, cl);
 	map<char, int> rank_heuI = rank_from_array( igr, cl);
 	print_rank(rank_heuI);
-	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heuI, ranks, count) << endl;
+	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heuI, ranks, k) << endl;
 
 	cout << "FAS-pivot" << endl;
 	int * FAS = graph::feedback_arc_set_pivot(*graph);
 
 	map<char, int> rank_heuFAS = rank_from_array( FAS, cl);
 	print_rank(rank_heuFAS);
-	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, count) << endl;
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, k) << endl;
 
 	// Applying locally Kemenysation
 	cout << "FAS-pivot`with locally Kemenysation" << endl;
 	DVhamiltonPathForTournament(*graph, FAS);
 	rank_heuFAS = rank_from_array( FAS, cl);
 	print_rank(rank_heuFAS);
-	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, count) << endl;
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, k) << endl;
 
-	char * rh = hamiltonian_path_tournament(G, outdegree, cl);
+	cout << "topological" << endl;
+	int * topsort = hamiltonPathForTournament(*graph);
+	map<char, int> rank_heutopsort = rank_from_array( topsort, cl);
+	print_rank(rank_heutopsort);
+	cout << "Sum Kendall rank(topsort) : " << _kemeny_rule(rank_heutopsort, ranks, k) << endl;
+
+
+	DVhamiltonPathForTournament(*graph, topsort);
+	rank_heutopsort = rank_from_array( topsort, cl);
+	print_rank(rank_heutopsort);
+	cout << "Sum Kendall rank(topsort) : " << _kemeny_rule(rank_heutopsort, ranks, k) << endl;
+
+
+	/*char * rh = hamiltonian_path_tournament(G, outdegree, cl);
 
 	
 	print_array(rh, cl);
 	map<char, int> rank_heu = rank_from_array( rh, cl);
 
 	print_rank(rank_heu);
-	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heu, ranks, count) << endl;
-
+	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heu, ranks, k) << endl;
+	
 	for (int i = 0; i < cl; ++i)
 	{
 		for (int j = 0; j < cl; ++j)
@@ -610,7 +645,7 @@ int main(int argc, char const *argv[])
 		}
 
 		cout << endl;
-	}
+	}*/
 
 	((Graph_Adj_Matrix*)graph)->printAsMatrix();
 
