@@ -12,15 +12,17 @@
 #include <vector>
 #include <map>
 
-#include "IGraph.h"
-#include "Graph_Adj_Matrix2.hpp"
+#include "kalgorithms.hpp"
+#include "kstructure.h"
+
+using namespace std;
+using namespace klib;
+
 #include "Graph_Hamilton_Path.cpp"
 #include "Graph_Search.cpp"
 #include "Graph_Minimum_Spanning_Tree.cpp"
 #include "Single_Source_Shortest_Path.cpp"
 #include "Graph_Feedback_Arc_Set.cpp"
-
-using namespace std;
 
 
 void print_array(int a[], int n){
@@ -511,24 +513,30 @@ int main(int argc, char const *argv[])
 	srand(time(NULL));
 	
 	int k = 6; // number of list
-	int n = 6;  // number of candidates
+	int n = 4;  // number of candidates
 	int m = n; // top-m rank
 
 	map<char, int> *ranks = new map<char, int>[k];
+	vector<Permutation<char, int>* > perms;
 	char **ranks_arr = new char*[k];
 	map<char, int> opt;
 	
 	double *sum_dist = new double[k];
 	memset(sum_dist, 0, sizeof(double)*k);
 	
-	
 	for (int i = 0; i < k; ++i)
-	{
-		
+	{	
 		ranks_arr[i] = new char[m];
 	 	ranks[i] = gen_rank(1, n, m, ranks_arr[i]);
+	 	perms.push_back(gen_rank<char, int, PermutationTree<char, int> >(1, n, m, 'A'));
 	 	cout << ranks_arr[i] << endl;
+
+	 	perms[i]->print(); cout << endl;
+	 	cout << "VV :"  << (*perms[i])('A') << " : " << (*perms[i])('J') << endl;
 	}
+
+	IGraph * tournament = create_majority_graph(perms, k, m, n, 'A');
+	kemeny_consensus(perms[0], perms)->print();
 
     cout << "Gen all..." <<endl;
 

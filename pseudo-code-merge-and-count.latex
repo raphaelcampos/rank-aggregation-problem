@@ -1,0 +1,39 @@
+\begin{algorithm}
+\caption{$Merge\_and\_Count(list_L, list_R)$}
+\label{algorithm:bf}
+\begin{algorithmic}[1]
+    \STATE $count \gets 0$
+    \STATE $i \gets list_L.begin$
+    \STATE $j \gets list_R.begin$
+    
+    \WHILE {$i \neq list_L.end$ \AND $j \neq list_R.end$ } 
+        \STATE Seja $list_L[i]$ and $list_R[j]$ os elementos apontados por $i$ e $j$
+        \STATE Anexe o menor desses dois na lista de saída
+        \IF {$list_R[j]$ é o menor elemento}
+            \STATE incrementa $count$ pelo número de elementos ainda em $list_L$ 
+        \ENDIF
+        \STATE avance o ponteiro na lista da qual o menor elemento foi selecionado
+    \ENDWHILE
+    \STATE Assim que uma lista estiver vazia, anexar os elementos restantes da outra lista na saída
+    \RETURN $count$ \AND lista mesclada
+    
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{$Sort\_and\_Count(list)$}
+\label{algorithm:bf}
+\begin{algorithmic}[1]
+     \IF {lista tem um elemento}
+            \RETURN 0
+    \ELSE
+        \STATE divida lista em duas metades
+        \STATE $list_L$ contém os primeiros $[n/2]$ elementos
+        \STATE $list_R$ contém os restantes $[n/2]$ elementos
+        \STATE $(r_L, list_L) \gets Sort\_and\_Count(list_L)$
+        \STATE $(r_R, list_R) \gets Sort\_and\_Count(list_R)$
+         \STATE $(r, list) \gets Merge\_and\_Count(list_L, list_R)$
+    \ENDIF
+    \RETURN $count$ \AND lista ordenada
+\end{algorithmic}
+\end{algorithm}

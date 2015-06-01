@@ -1,3 +1,6 @@
+#ifndef __I_G_HAMILTON_PATH__
+#define __I_G_HAMILTON_PATH__
+
 #include <cmath>
 #include "IGraph.h"
 
@@ -207,3 +210,5 @@ int * DVhamiltonPathForTournament(IGraph &tour){
 
 	return path;
 }
+
+#endif
