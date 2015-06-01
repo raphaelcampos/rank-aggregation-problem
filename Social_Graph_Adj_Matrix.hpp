@@ -11,8 +11,10 @@
 #include "Graph_Adj_Matrix2.hpp"
 #include "IGraph.h"
 #include "PriorityQueue.cpp"
+#include <dlib/matrix.h>
 
 using namespace std;
+using namespace dlib;
 
 class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
     
@@ -384,7 +386,7 @@ void Social_Graph_Adj_Matrix::printMetrics(){
     cout << "(i) Fracao falso positivos : " << 1 - fhcc << endl;
     cout << "(j) Fracao falso negativos : " << 1 - fscc << endl;
 
-    //mixingTime();
+    mixingTime();
 }
 
 /**
@@ -394,7 +396,7 @@ void Social_Graph_Adj_Matrix::printMetrics(){
  */
 double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
     double sum = 0;
-    
+    int total = 0;
     for (set<int>::iterator i = V.begin(); i != V.end(); ++i)
     {
         int numEdges = 0;
@@ -409,20 +411,12 @@ double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
                 if(edgeExists(*j, *k) && edgeExists(*k, *i) && edgeExists(*i, *k)) numEdges++;
             }
         }
-        coef = 2*numEdges/(double)(inGroup[*i]*(inGroup[*i]-1));
+        total += inGroup[*i];
+        coef = 2.0*numEdges/(double)(inGroup[*i]*(inGroup[*i]-1));
         sum += coef;
     }
-
-
-    int numEdges = 0;
-    for (set<int>::iterator i = V.begin(); i != V.end(); ++i)
-    {   
-        numEdges += inGroup[*i];
-    }
-    cout << numEdges/(double)(V.size()*(V.size()-1)) << endl;
-
-    return sum/groupB.size();
-
+    
+    return sum/V.size();
 }
 
 double Social_Graph_Adj_Matrix::modularity(){
@@ -433,8 +427,6 @@ double Social_Graph_Adj_Matrix::modularity(){
     mA = (ls/L) - (ds/(2.0*L))*(ds/(2.0*L));
     //cout << "ls : " << ls << " ds : " << ds << " mA : " << mA << endl;   
     
-    ls = 0;
-    ds = 0;
     ls = L - eGroupA - eGroupAB; // number of edges in B
     ds = 2*ls + eGroupAB;
     mB = ((ls)/L) - (ds/(2.0*L))*(ds/(2.0*L));
@@ -446,54 +438,72 @@ double Social_Graph_Adj_Matrix::modularity(){
 
 double Social_Graph_Adj_Matrix::mixingTime(){
     int n = this->numVertices();
-    double **P = new double*[n];
-    double *pi = new double[n];
+    matrix<double> P = zeros_matrix<double>(n,n);
+    matrix<double> ds(1, n);
+    matrix<double> iD(1, n);
+    matrix<double> delta = ones_matrix<double>(1, n);
     bool *seen = new bool[n];
     for (IGraph::vertex_iterator u = this->begin(); u != this->end(); ++u)
     {
-        P[u->id] = new double[n];
-        memset(P[u->id], 0, sizeof(double)*n);
-        pi[u->id] = u->outdegree/(2.0*numEdges());
+        ds(0, u->id) = u->outdegree/((double)numEdges());
+        iD(0, u->id) = 1.0/n;
         seen[u->id] = false;
 
         for (IGraph::vertex::iterator e = u->begin(); e != u->end(); ++e)
         {
             IGraph::vertex * v = e->second;
-            P[u->id][v->id] = 1.0/(u->outdegree);
+            P(u->id, v->id) = 1.0/(u->outdegree);
             //cout << u->id<< ":" <<v->id << " " << P[u->id][v->id] << " ";
         }
         //cout << endl;
     }
+    matrix<double> Pt = P;
+    //cout << ds << endl;
 
-    for (int i = 0; i < n; ++i)
-    {
-        //cout << pi[i] << " ";
-        if(seen[i]) cout << "visto :" << i << endl;
-    }
+    int t = 0;
+    
+    double epslon = 10e-2;
+    double maxi = 1;
 
-    cout << endl;
-    srand(time(NULL));
+    matrix<double> eigenvector = real_eigenvalues(P);
+    std::sort(&eigenvector(0), &eigenvector(0)+eigenvector.size());
+    cout << eigenvector << endl;
+    double mi = max(eigenvector(1), eigenvector(eigenvector.size()-2));
+    cout << "MI : " << mi << endl;
+    cout << "upper bound : " << (log(n) + log(1/epslon))/(1-mi) << endl;
+    cout << "lower bound : " << (mi/(2-2*mi))*log(1/(2*epslon)) << endl;
+    return 10;
+    while(maxi = max(delta)){
+        cout << maxi << endl;
+        if(maxi < epslon) break;
 
-    IGraph::vertex *t = getVertex(rand()%n);
-    int steps = 0;
-    //cout << t->id << endl;
-    // random walking
-    while(!seen[t->id]){
-        cout << t->id << endl;
-        seen[t->id] = true;
-        int neigh = rand()%t->outdegree;
-        
-        cout << "neigh : " << neigh << endl;
-        int i = 0;
-        for (IGraph::vertex::iterator e = t->begin(); e != t->end() && i <= neigh; ++e, i++)
+        for (int i = 0; i < n; ++i)
         {
-            t = e->second;
+            double dist = sum(abs(rowm(Pt, i) - ds));
+            if(delta(0, i) > dist){
+                delta(0, i) = dist;
+                iD(0, i) = t;
+            }
         }
-        
-        steps++;
+
+        Pt = Pt * P;
+        t++;
+        cout << t << " ";
     }
 
-    cout << steps << " <= " << log10(n) << endl;
+
+    cout << setprecision(15) << sum(ds) << endl;
+    cout << setprecision(15) << sum(rowm(Pt, 0)) << endl;
+    cout << setprecision(15) << sum(rowm(Pt, 1)) << endl;
+    /*double max = 0;
+    for (int i = 0; i < Pt.nr(); ++i)
+    {
+        double x = 
+        cout << endl << setprecision(15) << x << endl;
+    
+    }*/
+    cout << "MAX : " << max(iD) << " " <<  maxi << " " << min(delta) << endl;
+
 
 }
 

@@ -226,6 +226,35 @@ map<char, int> kemeny_consensus(char ini_rank[], int n, map<char, int> ranks[], 
 	return opt;
 }
 
+int * kemeny_consensus_v(char ini_rank[], int n, map<char, int> ranks[], int rs){
+
+	map<char, int> opt;
+
+	std::sort (ini_rank, ini_rank + n);
+
+	double min = 10000000;
+
+	
+	do {
+		map<char, int> r = rank_from_array(ini_rank, n);
+
+	 	double v = _kemeny_rule(r, ranks, rs);
+	    if (min > v){
+	    	opt = r;
+	    	min = v;
+	    }
+	} while ( std::next_permutation(ini_rank, ini_rank + n) );
+
+	int * out = new int[n];
+	for (map<char, int>::iterator i = opt.begin(); i != opt.end(); ++i)
+	{
+		cout << i->first << endl;
+		out[i->second] = (int) i->first - 'A';
+	}
+
+	return out;
+}
+
 char* union_all(map<char, int> ranks[], int n, int &size){
 	map<char, int> rank = ranks[0];
 	for (int i = 1; i < n; ++i)
@@ -249,16 +278,6 @@ char* union_all(map<char, int> ranks[], int n, int &size){
 
 	return c;
 }
-
-/*void DFS(int i, int **G, int *visited, int n)
-{
-    int j;
-    printf("\n%C", 'A' + i);
-    visited[i]=1;
-    for(j=0;j<n;j++)
-        if(!visited[j]&&G[i][j]==1)
-            DFS(j, G, visited, n);
-}*/
 
 class GreaterOutDegree
 {
@@ -516,7 +535,7 @@ int main(int argc, char const *argv[])
 	}
 
 	print_rank(ranks[min_dist]);
-	cout << "Sum Kendall rank(" << min_dist + 1 << ") : " << sum_dist[min_dist] << endl;
+	cout << "Sum Kendall rank(" << min_dist + 1 << ") : " << sum_dist[min_dist]/count << endl;
 
 	int cl;
 	char *c = union_all(ranks, count, cl);
@@ -524,8 +543,16 @@ int main(int argc, char const *argv[])
 	print_array(c, cl);
 	cout << "OPTIMAL :: " << endl;
 	opt = kemeny_consensus(c, cl, ranks, count);
+	int * out = new int[cl];
+	for (map<char, int>::iterator i = opt.begin(); i != opt.end(); ++i)
+	{
+		cout << i->second << " " << i->first << endl;
+		out[i->second-1] = (int) i->first - 'A';
+	}
 	print_rank(opt);
 	cout << "Sum Kendall rank(optimal) : " << _kemeny_rule(opt, ranks, count) << endl;
+
+	
 
 	cout << "Heuristic :: " << endl;
 
@@ -540,6 +567,12 @@ int main(int argc, char const *argv[])
 	IGraph * graph = create_majority_graph(ranks_arr, count, k, cl);
 	int* igr = DVhamiltonPathForTournament(*graph);
 
+	cout << "Optimal with locally Kemenysation" << endl;
+	DVhamiltonPathForTournament(*graph, out);
+	opt = rank_from_array( out, cl);
+	print_rank(opt);
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(opt, ranks, count) << endl;
+
 	cout <<  "aqui : " ;
 	print_array(igr, cl);
 	map<char, int> rank_heuI = rank_from_array( igr, cl);
@@ -548,11 +581,20 @@ int main(int argc, char const *argv[])
 
 	cout << "FAS-pivot" << endl;
 	int * FAS = graph::feedback_arc_set_pivot(*graph);
+
 	map<char, int> rank_heuFAS = rank_from_array( FAS, cl);
 	print_rank(rank_heuFAS);
 	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, count) << endl;
 
+	// Applying locally Kemenysation
+	cout << "FAS-pivot`with locally Kemenysation" << endl;
+	DVhamiltonPathForTournament(*graph, FAS);
+	rank_heuFAS = rank_from_array( FAS, cl);
+	print_rank(rank_heuFAS);
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, count) << endl;
+
 	char * rh = hamiltonian_path_tournament(G, outdegree, cl);
+
 	
 	print_array(rh, cl);
 	map<char, int> rank_heu = rank_from_array( rh, cl);

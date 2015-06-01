@@ -15,8 +15,12 @@ void complete2Tournament(IGraph &comp, IGraph &tour, bool unweighted = true){
 
 					if(w1 > w2)
 						tour.addEdge(v->id, u->second->id, (unweighted)? 1 : w1);
-					else
+					else if(w1 < w2)
 						tour.addEdge(u->second->id, v->id, (unweighted)? 1 : w2);
+					else{
+						tour.addEdge(u->second->id, v->id, (unweighted)? 1 : w2);
+						tour.addEdge(v->id, u->second->id, (unweighted)? 1 : w1);
+					}
 				}
 			}
 		}
@@ -117,7 +121,12 @@ int tour_ham_sort_and_count(IGraph &tour, int A[], int buffer[], int ini, int fi
 		 tour_ham_merge_and_count(tour, A, buffer, ini, fim, meio);
 		 ;
 	}
+}
 
+void DVhamiltonPathForTournament(IGraph &tour, int * path){
+	int * buffer = new int[tour.numVertices()];
+
+	tour_ham_sort_and_count(tour, path, buffer, 0, tour.numVertices() - 1);
 }
 
 int * DVhamiltonPathForTournament(IGraph &tour){
