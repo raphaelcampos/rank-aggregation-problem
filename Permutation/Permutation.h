@@ -67,6 +67,10 @@ class Permutation{
                     this->imp = imp;
                 }
 
+                ~iterator(){
+                    delete imp;
+                }
+
             private:
                 iterator_imp * imp;
         };

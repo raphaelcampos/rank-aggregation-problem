@@ -8,12 +8,9 @@ void complete2Tournament(IGraph &comp, IGraph &tour, bool unweighted = true){
 
 	//if(comp.isComplete()){
 	//	cout << "complete2Tournament" << endl;
-	cout << "creating tour" << endl;
 		for (IGraph::vertex_iterator v = comp.begin(); v != comp.end(); v++){
-			cout << v->id << " ";
 			for (IGraph::vertex::iterator u = v->begin(); u != v->end(); u++){
 				if(!(tour.edgeExists(v->id,u->second->id) || tour.edgeExists(u->second->id, v->id))){
-					cout << u->second->id << endl;
 					double w1 = comp.getEdge(v->id, u->second->id);
 					double w2 = comp.getEdge(u->second->id, v->id);
 					
@@ -60,7 +57,7 @@ int * hamiltonPathForTournament(IGraph &tour){
 		u = Q.front();
 		Q.pop();
 		
-		cout << u->id << " in : " << u->indegree << " out : " << u->outdegree << endl;
+		//cout << u->id << " in : " << u->indegree << " out : " << u->outdegree << endl;
 
 		int min = 100000;
 		IGraph::vertex * s = NULL;
@@ -84,12 +81,6 @@ int * hamiltonPathForTournament(IGraph &tour){
 		color[u->id] = BLACK;
 		path[i] = u->id;
 		i++;
-	}
-
-	cout << "BRANC " << WHITE << endl;
-	for (int i = 0; i < n; ++i)
-	{
-		cout << path[i] << endl;
 	}
 
 	return path;

@@ -336,8 +336,6 @@ IGraph * create_majority_graph(char * ranks[], int rs, int m, int cl){
 			}
 		}		
 	}
-	cout << "graph created" << endl;
-	((Graph_Adj_Matrix*)g)->printAsMatrix();
 
 	/*IGraph *gmst = new Graph_Adj_Matrix(8);
 	IGraph::vertex * s = &(*gmst->begin());
@@ -380,16 +378,8 @@ IGraph * create_majority_graph(char * ranks[], int rs, int m, int cl){
 	graph::bellman_ford(*gmst, *s);
 	*/
 	IGraph * tour = new Graph_Adj_Matrix(cl);
-	IGraph * wTour = new Graph_Adj_Matrix(g->numVertices());
 	cout << "instance" << endl; 
 	complete2Tournament(*g, *tour);
-
-	//complete2Tournament(*g, *wTour, false);
-	
-	cout << "WEIGHTED : " << endl;
-	((Graph_Adj_Matrix*)wTour)->printAsMatrix();
-	/*cout << "UNWEIGHTED : " << endl;
-	((Graph_Adj_Matrix*)tour)->printAsMatrix();*/
 
 	return tour;
 }
@@ -510,14 +500,17 @@ char * hamiltonian_path_tournament(int **G, pair<int, int> *outdegree, int n){
 int main(int argc, char const *argv[])
 {
 
-	srand(time(NULL));
+	int seed = 1433209953;//time(NULL);
+	srand(seed);
+
+	//cout << std::scientific;
+	cout << "seed : " << seed << endl;
 	
-	int k = 6; // number of list
-	int n = 4;  // number of candidates
+	int k = 101; // number of list
+	int n = 8;  // number of candidates
 	int m = n; // top-m rank
 
 	map<char, int> *ranks = new map<char, int>[k];
-	vector<Permutation<char, int>* > perms;
 	char **ranks_arr = new char*[k];
 	map<char, int> opt;
 	
@@ -528,15 +521,8 @@ int main(int argc, char const *argv[])
 	{	
 		ranks_arr[i] = new char[m];
 	 	ranks[i] = gen_rank(1, n, m, ranks_arr[i]);
-	 	perms.push_back(gen_rank<char, int, PermutationTree<char, int> >(1, n, m, 'A'));
-	 	cout << ranks_arr[i] << endl;
-
-	 	perms[i]->print(); cout << endl;
-	 	cout << "VV :"  << (*perms[i])('A') << " : " << (*perms[i])('J') << endl;
+		cout << ranks_arr[i] << endl;
 	}
-
-	IGraph * tournament = create_majority_graph(perms, k, m, n, 'A');
-	kemeny_consensus(perms[0], perms)->print();
 
     cout << "Gen all..." <<endl;
 
@@ -628,7 +614,6 @@ int main(int argc, char const *argv[])
 	map<char, int> rank_heutopsort = rank_from_array( topsort, cl);
 	print_rank(rank_heutopsort);
 	cout << "Sum Kendall rank(topsort) : " << _kemeny_rule(rank_heutopsort, ranks, k) << endl;
-
 
 	DVhamiltonPathForTournament(*graph, topsort);
 	rank_heutopsort = rank_from_array( topsort, cl);

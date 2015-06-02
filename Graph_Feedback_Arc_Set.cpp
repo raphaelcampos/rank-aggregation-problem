@@ -1,3 +1,6 @@
+#ifndef __GRAPH_FAS__
+#define __GRAPH_FAS__
+
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
@@ -7,18 +10,16 @@
 
 #include "IGraph.h"
 
-using namespace std;
-
 namespace graph{
 
-	void FAS_pivot(IGraph &graph, vector<int> &vertices){
+	void FAS_pivot(IGraph &graph, std::vector<int> &vertices){
 		
 		if(vertices.size() <= 1) return;
 		// pick random pivot
 		int i = vertices[rand()%(vertices.size())];
 		
-		vector<int> vL;
-		vector<int> vR;
+		std::vector<int> vL;
+		std::vector<int> vR;
 		
 		for (int j = 0; j < vertices.size(); ++j)
 		{
@@ -56,7 +57,7 @@ namespace graph{
 		int n = graph.numVertices();
 		
 		int *v = new int[n];
-		vector<int> vertices;
+		std::vector<int> vertices;
 		for (IGraph::vertex_iterator v = graph.begin(); v != graph.end(); ++v)
 		{
 			vertices.push_back(v->id);
@@ -66,12 +67,14 @@ namespace graph{
 		for (int i = 0; i < vertices.size(); ++i)
 		{
 			v[i] = vertices[i];
-			cout << (char)((int)'A' + vertices[i]) << " ";
+			//cout << (char)((int)'A' + vertices[i]) << " ";
 		}
-		cout << endl;
+		//cout << endl;
 
 		return v;
 	}
 
 
 }
+
+#endif

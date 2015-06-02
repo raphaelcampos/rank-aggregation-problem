@@ -11,7 +11,8 @@
 #include <queue>
 #include <vector>
 #include <map>
-
+	
+#include "kutils.hpp"
 #include "kalgorithms.hpp"
 #include "kstructure.h"
 
@@ -50,153 +51,95 @@ char* union_all(map<char, int> ranks[], int n, int &size){
 
 int main(int argc, char const *argv[])
 {
+	int seed = time(NULL);
+	srand(seed);
 
-	srand(time(NULL));
+	cout << "seed : " << seed << endl;
 	
-	int k = 6; // number of list
-	int n = 4;  // number of candidates
-	int m = n; // top-m rank
+	const int k = 10; // number of list
+	const int n = 8; // number of candidates
+	const int m = n; // top-m rank
 
-	map<char, int> *ranks = new map<char, int>[k];
-	vector<Permutation<char, int>* > perms;
-	char **ranks_arr = new char*[k];
-	map<char, int> opt;
+	typedef char element_type;
+	typedef int rank_type;
+
+	vector<Permutation<element_type, rank_type>* > perms;
 	
 	double *sum_dist = new double[k];
 	memset(sum_dist, 0, sizeof(double)*k);
 	
+	cout << "Generating syntetic rankings..." << endl;
 	for (int i = 0; i < k; ++i)
 	{	
-		ranks_arr[i] = new char[m];
-	 	ranks[i] = gen_rank(1, n, m, ranks_arr[i]);
-	 	perms.push_back(gen_rank<char, int, PermutationTree<char, int> >(1, n, m, 'A'));
-	 	cout << ranks_arr[i] << endl;
-
+	 	perms.push_back(gen_rank<char, int, PermutationTree<element_type, rank_type> >(1, n, m, 'A'));
 	 	perms[i]->print(); cout << endl;
-	 	cout << "VV :"  << (*perms[i])('A') << " : " << (*perms[i])('J') << endl;
 	}
 
+	cout << "# rankings : " << k << endl;
+	cout << "# candidates : " << n << endl;
+	cout << "# top-m size : " << m << endl;
+
+	cout << "------------------------------------------------------------" << endl;
+	cout << "Executing Optimal-Kemeny-Consensus..." << endl;
+	cout << "------------------------------------------------------------" << endl;
 	IGraph * tournament = create_majority_graph(perms, k, m, n, 'A');
-	kemeny_consensus(perms[0], perms)->print();
+	Permutation<element_type, rank_type> * opt = kemeny_consensus(perms[0], perms);
+	
+	opt->print();
+	cout << "\nSum Kendall rank(optimal) : " << _kemeny_rule<element_type, rank_type>(*opt, perms) << endl;
 
-    cout << "Gen all..." <<endl;
-
+	Permutation<element_type, rank_type> * opt_kemenized = locally_kemenysation(*tournament, *opt, 'A');
+	opt_kemenized->print();
+	cout << "\nSum Kendall rank(optimal kemenized) : " << _kemeny_rule<element_type, rank_type>(*opt_kemenized, perms) << endl;
+	cout << "------------------------------------------------------------" << endl;
+	cout << "Executing Pink-A-List 2-aproximated algorithm..." << endl;
+	cout << "------------------------------------------------------------" << endl;
 	for (int i = 0; i < k; ++i)
 	{
 		for (int j = i+1; j < k; ++j)
 		{
-			double dist = kendall_dist(ranks[i], ranks[j]);
+			double dist = kendall_dist<element_type, rank_type>(*perms[i], *perms[j]);
 			sum_dist[i] += dist;
 			sum_dist[j] += dist;
-
-			//cout << i << " - " << j << " : " << dist << endl;
 		}
 	}
 
 	int min_dist = 0;
 	for (int i = 1; i < k; ++i)
 	{
-		//print_rank(ranks[i]);
-		//cout << "Sum Kendall rank(" << i + 1 << ") : " << sum_dist[i] << endl;
 		if(sum_dist[i] < sum_dist[min_dist]){
 			min_dist = i;
 		}
 	}
 
-	print_rank(ranks[min_dist]);
-	cout << "Sum Kendall rank(" << min_dist + 1 << ") : " << sum_dist[min_dist]/k << endl;
+	perms[min_dist]->print();
+	cout << "\nSum Kendall rank(" << min_dist + 1 << ") : " << sum_dist[min_dist] << endl;
 
-	int cl;
-	char *c = union_all(ranks, k, cl);
-	cout << "size : " << cl << endl;
-	print_array(c, cl);
-	cout << "OPTIMAL :: " << endl;
-	opt = kemeny_consensus(c, cl, ranks, k);
-	int * out = new int[cl];
-	for (map<char, int>::iterator i = opt.begin(); i != opt.end(); ++i)
-	{
-		cout << i->second << " " << i->first << endl;
-		out[i->second-1] = (int) i->first - 'A';
-	}
-	print_rank(opt);
-	cout << "Sum Kendall rank(optimal) : " << _kemeny_rule(opt, ranks, k) << endl;
+	Permutation<element_type, rank_type> * kemenized = locally_kemenysation(*tournament, *perms[min_dist], 'A');
+	kemenized->print();
+	cout << "\nSum Kendall rank(" << min_dist + 1 << ") : " << _kemeny_rule<element_type, rank_type>(*kemenized, perms) << endl;
 
-	cout << "Heuristic :: " << endl;
+	cout << "------------------------------------------------------------" << endl;
+	cout << "Executing FAS-pivot 2-aproximated algorithm..." << endl;
+	cout << "------------------------------------------------------------" << endl;
+	Permutation<element_type, rank_type> * fas_pivot = kFAS_pivot<element_type, rank_type>(*tournament, 'A');
+	fas_pivot->print();
+	cout << "\nSum Kendall rank(FAS Heuristic) : " << _kemeny_rule<element_type, rank_type>(*fas_pivot, perms) << endl;
 
-	/*int **G = new int*[cl];
-	for (int i = 0; i < cl; ++i)
-	{
-		G[i] = new int[cl];
-		memset(G[i], 0, sizeof(int)*cl);
-	}*/
+	Permutation<element_type, rank_type> * fas_pivot_kemenized = kFAS_pivot<element_type, rank_type>( *tournament, 'A', true);
+	fas_pivot_kemenized->print();
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule<element_type, rank_type>(*fas_pivot_kemenized, perms) << endl;
 
-	//pair<int, int> * outdegree = create_majority_graph(G, ranks_arr, count, k, cl);
-	IGraph * graph = create_majority_graph(ranks_arr, k, m, cl);
+	cout << "------------------------------------------------------------" << endl;
+	cout << "Executing FHP_greedy algorithm..." << endl;
+	cout << "------------------------------------------------------------" << endl;
+	Permutation<element_type, rank_type> * fhp_greedy = FHP_greedy<element_type, rank_type>(*tournament, 'A');
+	fhp_greedy->print();
+	cout << "\nSum Kendall rank(FAS Heuristic) : " << _kemeny_rule<element_type, rank_type>(*fhp_greedy, perms) << endl;
 
-	((Graph_Adj_Matrix*)graph)->printAsMatrix();
-	cout << "Optimal with locally Kemenysation" << endl;
-	print_array(out, cl);
-	DVhamiltonPathForTournament(*graph, out);
-	print_array(out, cl);
-	opt = rank_from_array( out, cl);
-	print_rank(opt);
-	cout << "Sum Kendall rank(optimal with locally Kemenysation) : " << _kemeny_rule(opt, ranks, k) << endl;
+	Permutation<element_type, rank_type> * fhp_greedy_kemenized = FHP_greedy<element_type, rank_type>( *tournament, 'A', true);
+	fhp_greedy_kemenized->print();
+	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule<element_type, rank_type>(*fhp_greedy_kemenized, perms) << endl;	
 
-
-	cout <<  "aqui : " ;
-	int* igr = DVhamiltonPathForTournament(*graph);
-	print_array(igr, cl);
-	map<char, int> rank_heuI = rank_from_array( igr, cl);
-	print_rank(rank_heuI);
-	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heuI, ranks, k) << endl;
-
-	cout << "FAS-pivot" << endl;
-	int * FAS = graph::feedback_arc_set_pivot(*graph);
-
-	map<char, int> rank_heuFAS = rank_from_array( FAS, cl);
-	print_rank(rank_heuFAS);
-	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, k) << endl;
-
-	// Applying locally Kemenysation
-	cout << "FAS-pivot`with locally Kemenysation" << endl;
-	DVhamiltonPathForTournament(*graph, FAS);
-	rank_heuFAS = rank_from_array( FAS, cl);
-	print_rank(rank_heuFAS);
-	cout << "Sum Kendall rank(FAS Heuristic) : " << _kemeny_rule(rank_heuFAS, ranks, k) << endl;
-
-	cout << "topological" << endl;
-	int * topsort = hamiltonPathForTournament(*graph);
-	map<char, int> rank_heutopsort = rank_from_array( topsort, cl);
-	print_rank(rank_heutopsort);
-	cout << "Sum Kendall rank(topsort) : " << _kemeny_rule(rank_heutopsort, ranks, k) << endl;
-
-
-	DVhamiltonPathForTournament(*graph, topsort);
-	rank_heutopsort = rank_from_array( topsort, cl);
-	print_rank(rank_heutopsort);
-	cout << "Sum Kendall rank(topsort) : " << _kemeny_rule(rank_heutopsort, ranks, k) << endl;
-
-
-	/*char * rh = hamiltonian_path_tournament(G, outdegree, cl);
-
-	
-	print_array(rh, cl);
-	map<char, int> rank_heu = rank_from_array( rh, cl);
-
-	print_rank(rank_heu);
-	cout << "Sum Kendall rank(Heuristic) : " << _kemeny_rule(rank_heu, ranks, k) << endl;
-	
-	for (int i = 0; i < cl; ++i)
-	{
-		for (int j = 0; j < cl; ++j)
-		{
-			cout << setw(5) << G[i][j] << " ";	
-		}
-
-		cout << endl;
-	}*/
-
-	((Graph_Adj_Matrix*)graph)->printAsMatrix();
-
-	return 0;
+	return EXIT_SUCCESS;
 }

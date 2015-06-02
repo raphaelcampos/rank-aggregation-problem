@@ -23,7 +23,6 @@ class PermutationTree : public Permutation<element_type, rank_type>{
 
                 void prev(){
                     ptr_--;
-                    cout << ptr_->first << " : " << ptr_->second << endl;
                 }
                 
                 typename Permutation<element_type, rank_type>::iterator_imp * clone(){

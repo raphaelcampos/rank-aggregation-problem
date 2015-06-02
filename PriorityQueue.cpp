@@ -4,8 +4,11 @@
 #include <cstdio>
 #include <algorithm>
 #include <functional>
+#include <iostream>
+#include <string.h>
+#include <time.h>
+#include <cmath>
 
-using namespace std;
 
 template<
     typename key_type,

@@ -3,81 +3,14 @@
 
 #include "kstructure.h"
 #include "kendall-tau-distance.hpp"
+#include "kutils.hpp"
+
+#include "Graph_Hamilton_Path.cpp"
+#include "Graph_Feedback_Arc_Set.cpp"
+
+using namespace graph;
 
 namespace klib{
-
-	#include "Graph_Hamilton_Path.cpp"
-
-	template<
-		typename element_type,
-		typename rank_type,	
-		class ForwardIt1,
-		class ForwardIt2
-	>
-	void iter_swap(ForwardIt1 a, ForwardIt2 b)
-	{
-	   rank_type tmp; 
-	   
-	   tmp = a->second;
-	   a->second = b->second;
-	   b->second = tmp;
-	}
-
-	template<
-		typename element_type,
-		typename rank_type,
-		class BidirIt
-	>
-	void reverse(BidirIt first, BidirIt last)
-	{
-	    while ((first != last) && (first != --last)) {
-	        klib::iter_swap<element_type, rank_type>(first++, last);
-	    }
-	}
-
-	template<
-		typename element_type,
-		typename rank_type,
-		typename It
-	>
-	bool next_permutation(It begin, It end)
-	{
-	        if (begin == end)
-	                return false;
-
-	        It i = begin;
-	        ++i;
-	        if (i == end)
-	                return false;
-
-	        i = end;
-	        --i;
-
-	        while (true)
-	        {
-	                It j = i;
-	                --i;
-
-	                if ((*i).second < (*j).second)
-	                {
-	                        It k = end;
-
-	                        while (!((*i).second < (*--k).second))
-	                                /* pass */;
-
-	                        klib::iter_swap<element_type, rank_type>(i, k);
-
-	                        klib::reverse<element_type, rank_type>(j, end);
-	                        return true;
-	                }
-
-	                if (i == begin)
-	                {
-	                        klib::reverse<element_type, rank_type>(begin, end);
-	                        return false;
-	                }
-	        }
-	}
 
 	template<
 		typename element_type,
@@ -129,7 +62,6 @@ namespace klib{
 				typename perm_type::iterator l = j;
 				for (l++; l != rank->end(); ++l)
 				{	
-
 					int u = (int)j->first - ((int)first);
 					int v = (int)l->first - ((int)first);
 
@@ -142,29 +74,12 @@ namespace klib{
 					showed[v] = true;
 				}
 			}
-			/*if(m < cl){
-				for (int v = 0; v < cl; ++v)
-				{
-					if(!showed[v]){
-						for (int u = 0; u < cl; ++u)
-						{
-							if(u != v)
-								g->addEdge(u, v,  g->getEdge(u, v) + 1.0/rs);
-						}
-					}
-				}
-			}	*/	
 		}
-		cout << "graph created" << endl;
-		((Graph_Adj_Matrix*)g)->printAsMatrix();
-
+		
 		IGraph * tour = new Graph_Adj_Matrix(n);
-		cout << "instance" << endl; 
 		complete2Tournament(*g, *tour);
 		
-		cout << "WEIGHTED : " << endl;
-		((Graph_Adj_Matrix*)tour)->printAsMatrix();
-
+		
 		return tour;
 	}
 
@@ -179,7 +94,6 @@ namespace klib{
 		#pragma omp parallel for
 		for (int i = 0; i < ranks.size(); ++i)
 		{	
-			cout << "KKK" ; optimal.print(); cout << endl; ranks[i]->print(); cout << endl;
 			sum += kendall_dist<element_type, rank_type>(optimal, *ranks[i]);
 		}
 
@@ -204,16 +118,65 @@ namespace klib{
 		std::sort (ini_rank.begin(), ini_rank.end());
 		double min = 10000000;
 		do {
+
 			Permutation<element_type, rank_type> * r = new PermutationTree<element_type, rank_type>(ini_rank);
 
 		 	double v = _kemeny_rule<element_type, rank_type>(*r, ranks);
 		    if (min > v){
+		    	delete opt;
 		    	opt = r;
 		    	min = v;
+		    }else{
+		    	delete r;
 		    }
 		} while ( std::next_permutation(ini_rank.begin(), ini_rank.end()) );
 
 		return opt;
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	Permutation<element_type, rank_type> * locally_kemenysation(IGraph &tour, Permutation<element_type, rank_type> &pi, element_type first){
+		
+		int * vertex_ids_perm = permutation_to_vertex_perm(pi, first);
+
+		DVhamiltonPathForTournament(tour, vertex_ids_perm);
+
+		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), first);
+
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	Permutation<element_type, rank_type> * kFAS_pivot(IGraph &tour, element_type first, bool kemenyzation = false){
+		
+		int * vertex_ids_perm = feedback_arc_set_pivot(tour);
+
+		if(kemenyzation){
+			DVhamiltonPathForTournament(tour, vertex_ids_perm);
+		}
+			
+		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), first);
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	Permutation<element_type, rank_type> * FHP_greedy(IGraph &tour, element_type first, bool kemenyzation = false){
+		
+		int * vertex_ids_perm = hamiltonPathForTournament(tour);
+
+		if(kemenyzation){
+			DVhamiltonPathForTournament(tour, vertex_ids_perm);
+		}
+			
+		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), first);
+
 	}
 
 }
