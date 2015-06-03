@@ -32,9 +32,10 @@ void complete2Tournament(IGraph &comp, IGraph &tour, bool unweighted = true){
 
 int * hamiltonPathForTournament(IGraph &tour){
 	enum {BLACK, WHITE, GRAY};
-
+	
 	int * path = new int[tour.numVertices()];
 	int * color = new int[tour.numVertices()];
+	int * indegree = new int[tour.numVertices()];
 
 	queue< IGraph::vertex* > Q;
 	int n = tour.numVertices();
@@ -44,6 +45,7 @@ int * hamiltonPathForTournament(IGraph &tour){
 	for (IGraph::vertex_iterator it = tour.begin(); it != tour.end(); it++)
 	{
 		color[it->id] = WHITE;
+		indegree[it->id] = it->indegree;
 		if(min > it->indegree){
 			min = it->indegree;
 			u = &(*it);
@@ -52,12 +54,10 @@ int * hamiltonPathForTournament(IGraph &tour){
 
 	color[u->id] = GRAY;
 	Q.push(u);
-	int i = 0;	
+	int i = 0;
 	while(!Q.empty()){
 		u = Q.front();
 		Q.pop();
-		
-		//cout << u->id << " in : " << u->indegree << " out : " << u->outdegree << endl;
 
 		int min = 100000;
 		IGraph::vertex * s = NULL;
@@ -65,10 +65,10 @@ int * hamiltonPathForTournament(IGraph &tour){
 		{
 			IGraph::vertex *v = e->second;
 			if(color[v->id] == WHITE){
-				v->indegree--;
+				indegree[v->id]--;
 				
-				if(min > v->indegree){
-					min = v->indegree;	
+				if(min > indegree[v->id]){
+					min = indegree[v->id];	
 					s = &(*v);
 				}
 			}
