@@ -45,7 +45,9 @@ class PermutationTree : public Permutation<element_type, rank_type>{
                 typename map< element_type, rank_type >::iterator ptr_;
         };
 
-        PermutationTree(){}
+        PermutationTree(){
+            highest = 0;
+        }
 
         PermutationTree(const std::vector<element_type> &t){
             for (int i = 0; i < t.size(); ++i)

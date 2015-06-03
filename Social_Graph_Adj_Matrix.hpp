@@ -21,7 +21,6 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
     public:
         enum { GROUP_A, GROUP_B };
 
-
         Social_Graph_Adj_Matrix();
         Social_Graph_Adj_Matrix(const Social_Graph_Adj_Matrix &);
         Social_Graph_Adj_Matrix(int n, int ini = 0);
@@ -481,13 +480,15 @@ double Social_Graph_Adj_Matrix::mixingTime(){
 
         for (int i = 0; i < n; ++i)
         {
-            double dist = sum(abs(rowm(Pt, i) - ds));
+            double dist = sum(abs(rowm(Pt, i) - ds))/2;
             if(delta(0, i) > dist){
                 delta(0, i) = dist;
                 iD(0, i) = t;
             }
         }
 
+
+        cout << "MAX : " << t << " " <<  maxi << " " << min(delta) << endl;
         Pt = Pt * P;
         t++;
         //cout << t << " ";

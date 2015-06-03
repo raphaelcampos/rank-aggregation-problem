@@ -5,6 +5,45 @@
 
 namespace klib{
 	template<
+		typename arr_type
+	>
+	void print_array(arr_type a[], int n){
+		for (int l = 0; l < n; ++l)
+		{
+			cout << a[l] << ",";
+		}
+		cout << endl;
+		
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	void union_perm(Permutation<element_type, rank_type> &sigma, Permutation<element_type, rank_type> &tau){
+		
+		for (typename Permutation<element_type, rank_type>::iterator it = tau.begin(); it != tau.end(); ++it)
+		{
+			sigma.addElement(it->first, sigma(it->first));
+		}
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	void union_all(Permutation<element_type, rank_type> &sigma, vector<Permutation<element_type, rank_type> *>&perms){
+		//Permutation<element_type, rank_type> * perm = perms[0];
+		for (int i = 0; i < perms.size(); ++i)
+		{	
+			for (typename Permutation<element_type, rank_type>::iterator it = perms[i]->begin(); it != perms[i]->end(); ++it)
+			{
+				sigma.addElement(it->first, sigma(it->first));
+			}
+		}
+	}
+
+	template<
 		typename element_type
 	>
 	int * permutation_to_vertex_perm(Permutation<element_type, int> &p, element_type first){

@@ -500,13 +500,13 @@ char * hamiltonian_path_tournament(int **G, pair<int, int> *outdegree, int n){
 int main(int argc, char const *argv[])
 {
 
-	int seed = 1433209953;//time(NULL);
+	int seed =1433249523;// 1433209953;//time(NULL);
 	srand(seed);
 
 	//cout << std::scientific;
 	cout << "seed : " << seed << endl;
 	
-	int k = 101; // number of list
+	int k = 10; // number of list
 	int n = 8;  // number of candidates
 	int m = n; // top-m rank
 
@@ -611,6 +611,7 @@ int main(int argc, char const *argv[])
 
 	cout << "topological" << endl;
 	int * topsort = hamiltonPathForTournament(*graph);
+	print_array(topsort, cl);
 	map<char, int> rank_heutopsort = rank_from_array( topsort, cl);
 	print_rank(rank_heutopsort);
 	cout << "Sum Kendall rank(topsort) : " << _kemeny_rule(rank_heutopsort, ranks, k) << endl;
