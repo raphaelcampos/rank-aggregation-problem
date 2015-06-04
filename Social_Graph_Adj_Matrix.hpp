@@ -11,7 +11,7 @@
 #include "Graph_Adj_Matrix2.hpp"
 #include "IGraph.h"
 #include "PriorityQueue.cpp"
-#include <dlib/matrix.h>
+#include "dlib/matrix.h"
 
 using namespace std;
 using namespace dlib;
@@ -44,14 +44,16 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
 
         double clusteringCoefficient(const set<int> &V);
         double modularity();
-        double mixingTime();
+        double mixingTime(double epsilon = 10e-3);
 
         void putVertexInA(IGraph::vertex &v);
         inline double rank(int id);
 
         void loadSybils(string filename, bool isOrdered = true);
     
-        void printMetrics();
+        std::vector<double> calcMetrics();
+
+        std::vector<double> printMetrics();
 
     public:
         int *group;
@@ -351,7 +353,7 @@ void Social_Graph_Adj_Matrix::loadSybils(string filename, bool isOrdered){
     }
 }
 
-void Social_Graph_Adj_Matrix::printMetrics(){
+std::vector<double>  Social_Graph_Adj_Matrix::calcMetrics(){
     set<int> honests;
     set<int> result;
     
@@ -374,18 +376,41 @@ void Social_Graph_Adj_Matrix::printMetrics(){
     set_intersection(groupA.begin(),groupA.end(), honests.begin(), honests.end(), inserter(result, result.begin()));
     double fhcc = result.size()/(double)honests.size();
     
-    cout << "(a) Grau médio : " << numEdges()/((double)numVertices()) << endl;
-    cout << "(b) Modularidade : " << modularity() << endl;
-    cout << "(c) Condutancia Sybil : " << eGroupAB/(numEdges()/2.0 - eGroupA - eGroupAB)/*calcCNormalized(numEdges()/2.0 - eGroupA - eGroupAB, eGroupAB)*/ << endl;
-    cout << "(d) Condutancia Honesta : " << (double)eGroupAB/eGroupA/*calcCNormalized(eGroupA, eGroupAB)*/ << endl;
-    cout << "(e) Coef agrup Sybil : " << clusteringCoefficient(groupB) << endl;
-    cout << "(f) Coef agrup Honesta : " << clusteringCoefficient(groupA) << endl;
-    cout << "(g) Fracao sybil corretamente classif : " << fscc << endl;
-    cout << "(h) Fracao honestos corretamente classif : " << fhcc << endl;
-    cout << "(i) Fracao falso positivos : " << 1 - fhcc << endl;
-    cout << "(j) Fracao falso negativos : " << 1 - fscc << endl;
+    std::vector<double> metrics;
 
-    mixingTime();
+    metrics.push_back(numEdges()/((double)numVertices()));
+    metrics.push_back(modularity());
+    metrics.push_back(eGroupAB/(numEdges()/2.0 - eGroupA - eGroupAB));
+    metrics.push_back((double)eGroupAB/eGroupA);
+    metrics.push_back(clusteringCoefficient(groupB));
+    metrics.push_back(clusteringCoefficient(groupA));
+    metrics.push_back(fscc);
+    metrics.push_back(fhcc);
+    metrics.push_back(1 - fhcc);
+    metrics.push_back(1 - fscc);
+    metrics.push_back(mixingTime());
+
+    return metrics; 
+}
+
+std::vector<double> Social_Graph_Adj_Matrix::printMetrics(){
+
+    std::vector<double> metrics = calcMetrics();
+    
+    cout << "(a) Grau médio : " << metrics[0] << endl;
+    cout << "(b) Modularidade : " << metrics[1] << endl;
+    cout << "(c) Condutancia Sybil : " << metrics[2] << endl;
+    cout << "(d) Condutancia Honesta : " << metrics[3] << endl;
+    cout << "(e) Coef agrup Sybil : " << metrics[4] << endl;
+    cout << "(f) Coef agrup Honesta : " << metrics[5] << endl;
+    cout << "(g) Fracao sybil corretamente classif : " << metrics[6] << endl;
+    cout << "(h) Fracao honestos corretamente classif : " << metrics[7] << endl;
+    cout << "(i) Fracao falso positivos : " << metrics[8] << endl;
+    cout << "(j) Fracao falso negativos : " << metrics[9] << endl;
+    
+    cout << "(k) Mixing time : " << metrics[10] << endl;
+
+    return metrics;
 }
 
 /**
@@ -424,18 +449,15 @@ double Social_Graph_Adj_Matrix::modularity(){
     ls = eGroupA; // number of edges in A
     ds = (2.0*eGroupA) + eGroupAB;
     mA = (ls/L) - (ds/(2.0*L))*(ds/(2.0*L));
-    //cout << "ls : " << ls << " ds : " << ds << " mA : " << mA << endl;   
     
     ls = L - eGroupA - eGroupAB; // number of edges in B
     ds = 2*ls + eGroupAB;
     mB = ((ls)/L) - (ds/(2.0*L))*(ds/(2.0*L));
     
-    //cout << "ls : " << ls << " ds : " << ds << " mB : " << mB << endl;   
-
     return mA + mB;
 }
 
-double Social_Graph_Adj_Matrix::mixingTime(){
+double Social_Graph_Adj_Matrix::mixingTime(double epsilon){
     typedef std::map<unsigned long, double> sample;
     int n = this->numVertices();
     matrix<double> P = zeros_matrix<double>(n,n);
@@ -443,6 +465,7 @@ double Social_Graph_Adj_Matrix::mixingTime(){
     matrix<double> iD(1, n);
     matrix<double> delta = ones_matrix<double>(1, n);
     bool *seen = new bool[n];
+    
     for (IGraph::vertex_iterator u = this->begin(); u != this->end(); ++u)
     {
 
@@ -454,30 +477,25 @@ double Social_Graph_Adj_Matrix::mixingTime(){
         {
             IGraph::vertex * v = e->second;
             P(u->id, v->id) = 1.0/(u->outdegree);
-            //cout << u->id<< ":" <<v->id << " " << P[u->id][v->id] << " ";
         }
-
-        //cout << endl;
     }
+
     matrix<double> Pt = P;
 
-    int t = 0;
+    int t = 1;
     
-    double epslon = 10e-3;
-    double maxi = 1;
+    double maxi = 10;
     
-    matrix<double> eigenvector = real_eigenvalues(P);
+    /*matrix<double> eigenvector = real_eigenvalues(P);
     std::sort(&eigenvector(0), &eigenvector(0)+eigenvector.size());
-    cout << eigenvector << endl;
     double mi = max(eigenvector(1), eigenvector(eigenvector.size()-2));
     cout << "MI : " << mi << endl;
-    cout << "upper bound : " << (log(n) + log(1/epslon))/(1-mi) << endl;
-    cout << "lower bound : " << (mi/(2-2*mi))*log(1/(2*epslon)) << endl;
+    cout << "upper bound : " << (log(n) + log(1/epsilon))/(1-mi) << endl;
+    cout << "lower bound : " << (mi/(2-2*mi))*log(1/(2*epsilon)) << endl;*/
     
-    while(maxi = max(delta)){
-        //cout << maxi << endl;
-        if(maxi < epslon) break;
-
+    while(maxi > epsilon){
+        
+        double max_dist = 0;
         for (int i = 0; i < n; ++i)
         {
             double dist = sum(abs(rowm(Pt, i) - ds))/2;
@@ -485,28 +503,19 @@ double Social_Graph_Adj_Matrix::mixingTime(){
                 delta(0, i) = dist;
                 iD(0, i) = t;
             }
+            if(delta(0, i) > max_dist){
+                max_dist = delta(0, i);
+            }
         }
 
-
-        cout << "MAX : " << t << " " <<  maxi << " " << min(delta) << endl;
+        maxi = max_dist;
+        
         Pt = Pt * P;
+
         t++;
-        //cout << t << " ";
     }
 
-
-    cout << setprecision(15) << sum(ds) << endl;
-    cout << setprecision(15) << sum(rowm(Pt, 0)) << endl;
-    cout << setprecision(15) << sum(rowm(Pt, 1)) << endl;
-    /*double max = 0;
-    for (int i = 0; i < Pt.nr(); ++i)
-    {
-        double x = 
-        cout << endl << setprecision(15) << x << endl;
-    
-    }*/
-    cout << "MAX : " << max(iD) << " " <<  maxi << " " << min(delta) << endl;
-
+    return max(iD);
 
 }
 

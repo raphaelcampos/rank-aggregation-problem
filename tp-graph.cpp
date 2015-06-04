@@ -71,36 +71,42 @@ Social_Graph_Adj_Matrix * load_from_file(string filename){
 
 }
 
+template<
+	typename storage_type
+>
+void save_region(string filename, storage_type V){
+	ofstream out;
+	out.open(filename.c_str());
+	for (typename storage_type::iterator i = V.begin(); i != V.end(); ++i)
+    {
+    	out << *i << endl;
+    }
+    out.close();
+}
+
 int main(int argc, char const *argv[])
 {
-	char * f = "instancia/inGA.txt";
-	Social_Graph_Adj_Matrix *graph = load_from_file(argv[1]);
+	Social_Graph_Adj_Matrix *graphA = load_from_file(argv[1]);
+	Social_Graph_Adj_Matrix *graphB = load_from_file(argv[3]);
 	
 	int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
 	for (int i = 0; i < 20; ++i)
 	{
-		//graph->putVertexInA(*graph->getVertex(rand()%100));
-		graph->putVertexInA(*graph->getVertex(ids[i]));
+		graphA->putVertexInA(*graphA->getVertex(ids[i]));
+		graphB->putVertexInA(*graphB->getVertex(ids[i]));
 	}
-	graph->loadSybils(argv[2]);
-	graph->partion();
-	graph->printMetrics();
+	graphA->loadSybils(argv[2]);
+	graphA->partion();
+	std::vector<double> metrics = graphA->printMetrics();
+	save_region("regionHonestGA.txt", graphA->groupA);
+	save_region("regionSybilGA.txt", graphA->groupB);
+	save_region("metricsGA.txt", metrics);
 
-	//delete [] graph;
 
-	/*Social_Graph_Adj_Matrix *graph1 = load_from_file(argv[1]);
-	srand(time(NULL));
-	//int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
-	for (int i = 0; i < 20; ++i)
-	{
-		//graph->putVertexInA(*graph->getVertex(rand()%100));
-		graph1->putVertexInA(*graph1->getVertex(ids[i]));
-	}
-	graph1->partionate();
-
-	cout << "Grau médio : " << graph->numEdges()/(2.0*graph->numVertices()) << endl;
-
-	//delete [] graph1;*/
-
-	cout <<  "CALSS" << graph->calls << endl;
+	graphB->loadSybils(argv[4]);
+	graphB->partion();
+	metrics = graphB->printMetrics();
+	save_region("regionHonestGB.txt", graphB->groupA);
+	save_region("regionSybilGB.txt", graphB->groupB);
+	save_region("metricsGB.txt", metrics);
 }
