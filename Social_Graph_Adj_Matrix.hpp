@@ -482,13 +482,13 @@ double Social_Graph_Adj_Matrix::mixingTime(double epsilon){
 
     matrix<double> Pt = P;
 
-    int t = 1;
+    int t = 0;
     
     double maxi = 10;
     
     /*matrix<double> eigenvector = real_eigenvalues(P);
     std::sort(&eigenvector(0), &eigenvector(0)+eigenvector.size());
-    double mi = max(eigenvector(1), eigenvector(eigenvector.size()-2));
+    double mi = max(abs(eigenvector(1)), abs(eigenvector(eigenvector.size()-2)));
     cout << "MI : " << mi << endl;
     cout << "upper bound : " << (log(n) + log(1/epsilon))/(1-mi) << endl;
     cout << "lower bound : " << (mi/(2-2*mi))*log(1/(2*epsilon)) << endl;*/
@@ -499,15 +499,13 @@ double Social_Graph_Adj_Matrix::mixingTime(double epsilon){
         for (int i = 0; i < n; ++i)
         {
             double dist = sum(abs(rowm(Pt, i) - ds))/2;
-            if(delta(0, i) > dist){
-                delta(0, i) = dist;
-                iD(0, i) = t;
-            }
+            delta(0, i) = dist;
+            iD(0, i) = t;
+            
             if(delta(0, i) > max_dist){
                 max_dist = delta(0, i);
             }
         }
-
         maxi = max_dist;
         
         Pt = Pt * P;
