@@ -13,12 +13,25 @@
 #include "PriorityQueue.cpp"
 #include "dlib/matrix.h"
 
+#include <sys/time.h>
+#include <unistd.h>
+
 using namespace std;
 using namespace dlib;
+
+typedef unsigned long long timestamp_t;
+
+static timestamp_t get_timestamp ()
+{
+  struct timeval now;
+  gettimeofday (&now, NULL);
+  return  now.tv_usec + (timestamp_t)now.tv_sec * 1000000;
+}
 
 class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
     
     public:
+    
         enum { GROUP_A, GROUP_B };
 
         Social_Graph_Adj_Matrix();
@@ -377,18 +390,41 @@ std::vector<double>  Social_Graph_Adj_Matrix::calcMetrics(){
     double fhcc = result.size()/(double)honests.size();
     
     std::vector<double> metrics;
+    std::vector<double> execTime;
+
+    timestamp_t t0;
 
     metrics.push_back(numEdges()/((double)numVertices()));
+
+    t0 = get_timestamp();
     metrics.push_back(modularity());
+    execTime.push_back((get_timestamp() - t0) / 1000000.0L);
+    
     metrics.push_back(eGroupAB/(numEdges()/2.0 - eGroupA - eGroupAB));
     metrics.push_back((double)eGroupAB/eGroupA);
+
+    t0 = get_timestamp();
     metrics.push_back(clusteringCoefficient(groupB));
     metrics.push_back(clusteringCoefficient(groupA));
+    execTime.push_back((get_timestamp() - t0) / 1000000.0L);
+
     metrics.push_back(fscc);
     metrics.push_back(fhcc);
     metrics.push_back(1 - fhcc);
     metrics.push_back(1 - fscc);
-    metrics.push_back(mixingTime());
+    
+    t0 = get_timestamp();
+    metrics.push_back(mixingTime(1.0/this->numVertices()));
+    //metrics.push_back(0);
+    execTime.push_back((get_timestamp() - t0) / 1000000.0L);
+
+    
+    for (int i = 0; i < execTime.size(); ++i)
+    {
+         cout << " & " << execTime[i];
+    }
+
+    cout << " \\\\" << endl;
 
     return metrics; 
 }
@@ -407,7 +443,6 @@ std::vector<double> Social_Graph_Adj_Matrix::printMetrics(){
     cout << "(h) Fracao honestos corretamente classif : " << metrics[7] << endl;
     cout << "(i) Fracao falso positivos : " << metrics[8] << endl;
     cout << "(j) Fracao falso negativos : " << metrics[9] << endl;
-    
     cout << "(k) Mixing time : " << metrics[10] << endl;
 
     return metrics;
@@ -448,11 +483,11 @@ double Social_Graph_Adj_Matrix::modularity(){
     
     ls = eGroupA; // number of edges in A
     ds = (2.0*eGroupA) + eGroupAB;
-    mA = (ls/L) - (ds/(2.0*L))*(ds/(2.0*L));
+    mA = ((ls)/(L)) - pow(ds/(2.0*L),2.0);
     
     ls = L - eGroupA - eGroupAB; // number of edges in B
     ds = 2*ls + eGroupAB;
-    mB = ((ls)/L) - (ds/(2.0*L))*(ds/(2.0*L));
+    mB = ((ls)/(L)) - pow(ds/(2.0*L),2.0);
     
     return mA + mB;
 }
