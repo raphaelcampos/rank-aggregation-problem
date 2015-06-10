@@ -58,6 +58,7 @@ class Social_Graph_Adj_Matrix : public Graph_Adj_Matrix {
         double clusteringCoefficient(const set<int> &V);
         double modularity();
         double mixingTime(double epsilon = 10e-3);
+        double  mixingTimeOpt(double epsilon = 10e-3);
 
         void putVertexInA(IGraph::vertex &v);
         inline double rank(int id);
@@ -414,7 +415,7 @@ std::vector<double>  Social_Graph_Adj_Matrix::calcMetrics(){
     metrics.push_back(1 - fscc);
     
     t0 = get_timestamp();
-    metrics.push_back(mixingTime(1.0/this->numVertices()));
+    metrics.push_back(mixingTimeOpt(1.0/this->numVertices()));
     //metrics.push_back(0);
     execTime.push_back((get_timestamp() - t0) / 1000000.0L);
 
@@ -549,6 +550,78 @@ double Social_Graph_Adj_Matrix::mixingTime(double epsilon){
     }
 
     return max(iD);
+
+}
+
+double Social_Graph_Adj_Matrix::mixingTimeOpt(double epsilon){
+    typedef std::map<unsigned long, double> sample;
+    int n = this->numVertices();
+    matrix<double> P = zeros_matrix<double>(n,n);
+    matrix<double> ds(1, n);
+    matrix<double> iD(1, n);
+    matrix<double> delta = ones_matrix<double>(1, n);
+    bool *seen = new bool[n];
+    
+    for (IGraph::vertex_iterator u = this->begin(); u != this->end(); ++u)
+    {
+
+        ds(0, u->id) = u->outdegree/((double)numEdges());
+        iD(0, u->id) = 1.0/n;
+        seen[u->id] = false;
+        sample samp;
+        for (IGraph::vertex::iterator e = u->begin(); e != u->end(); ++e)
+        {
+            IGraph::vertex * v = e->second;
+            P(u->id, v->id) = 1.0/(u->outdegree);
+        }
+    }
+
+
+    int t = 1;
+    int ts = 6;
+    int tc = 10;
+    matrix<double> Pt = P;
+    matrix<double> Pts = P;
+    matrix<double> cum = P;
+    matrix<double> quad = P;
+    while(tc != 2){
+        
+        double maxi = 10;
+        tc = 1;
+ 
+        while(maxi > epsilon){
+            Pts = Pt;
+            Pt = cum * quad;
+            double max_dist = 0;
+            for (int i = 0; i < n; ++i)
+            {
+                double dist = sum(abs(rowm(Pt, i) - ds))/2;
+                delta(0, i) = dist;
+                iD(0, i) = ts;
+                
+                if(delta(0, i) > max_dist){
+                    max_dist = delta(0, i);
+                }
+            }
+            maxi = max_dist;
+            
+            
+            quad = quad * quad;
+            ts=tc;
+
+            //cout << maxi << " : " << tc << endl;
+            tc*=2;
+
+        }
+        delta = ones_matrix<double>(1, n); 
+        
+        t += (tc/4.0);
+        cum = Pts;
+        quad = P;
+
+        //cout << t << endl;
+    }
+    return t;
 
 }
 
