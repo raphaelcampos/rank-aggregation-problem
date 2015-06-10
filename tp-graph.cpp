@@ -137,7 +137,7 @@ int main(int argc, char const *argv[])
 	save_region("regionSybilGA.txt", graphA->groupB);
 	save_region("metricsGA.txt", metrics);
 
-
+	delete graphA;
 	graphB->loadSybils(argv[4]);
 	graphB->partion();
 	metrics = graphB->printMetrics();

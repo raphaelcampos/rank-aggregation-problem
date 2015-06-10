@@ -84,12 +84,15 @@ Social_Graph_Adj_Matrix::Social_Graph_Adj_Matrix()
 :Graph_Adj_Matrix(false){
     eGroupAB = 0;
     eGroupA = 0;
+    inGroup = NULL;
+    outGroup = NULL;
+    group = NULL;
 }
 
 Social_Graph_Adj_Matrix::Social_Graph_Adj_Matrix(const Social_Graph_Adj_Matrix & g)
 :Graph_Adj_Matrix(g){
     eGroupAB = 0;
-    eGroupA = 0;
+    eGroupA = 0;    
 }
 
 Social_Graph_Adj_Matrix::Social_Graph_Adj_Matrix(int n, int ini)
@@ -111,9 +114,12 @@ Social_Graph_Adj_Matrix::Social_Graph_Adj_Matrix(int n, int ini)
 }
 
 Social_Graph_Adj_Matrix::~Social_Graph_Adj_Matrix(){
-    delete [] group;
-    delete [] inGroup;
-    delete [] outGroup;
+    if(group != NULL)
+        delete [] group;
+    if(inGroup != NULL)
+        delete [] inGroup;
+    if(outGroup != NULL)
+        delete [] outGroup;
 }
 
 void Social_Graph_Adj_Matrix::addVertex(int v){
