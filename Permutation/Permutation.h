@@ -96,6 +96,12 @@ class Permutation{
          * @return   [description]
          */
         virtual rank_type operator()(element_type e) = 0;
+        /**
+         * [getVertex description]
+         * @param  v [description]
+         * @return   [description]
+         */
+        virtual element_type operator[](rank_type r) = 0;
 
         virtual void print() = 0;
 

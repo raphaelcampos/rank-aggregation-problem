@@ -98,6 +98,57 @@ namespace klib{
 
 	template<
 		typename element_type,
+		typename rank_type
+	>
+	IGraph * create_majority_graph(const vector<Permutation<element_type, rank_type> *> &ranks, int k, int m, int n, Permutation<element_type, int> &table){
+		typedef Permutation<element_type, rank_type> perm_type;
+
+		IGraph *g = new Graph_Adj_Matrix(n);
+		bool *showed = new bool[n];
+		
+		//O(km²)
+		for (int i = 0; i < ranks.size(); ++i)
+		{
+			memset(showed, 0, sizeof(bool)*n);
+			perm_type *rank = ranks[i];
+			for (typename perm_type::iterator j = rank->begin(); j != rank->end(); ++j)
+			{
+				typename perm_type::iterator l = j;
+				for (l++; l != rank->end(); ++l)
+				{	
+					int u = table(j->first) - 1;
+					int v = table(l->first) - 1;
+					if(j->second < l->second){
+						g->addEdge(u, v,  g->getEdge(u, v) + 1.0/k);
+					}else{
+						g->addEdge(v, u,  g->getEdge(v, u) + 1.0/k);
+					}
+					showed[u] = true;
+					showed[v] = true;
+				}
+			}
+			if(m < n){
+				for (int v = 0; v < n; ++v)
+				{
+					if(!showed[v]){
+						for (int u = 0; u < n; ++u)
+						{
+							if(u != v)
+								g->addEdge(u, v,  g->getEdge(u, v) + 1.0/k);
+						}
+					}
+				}
+			}		
+		}
+		
+		IGraph * tour = new Graph_Adj_Matrix(n);
+		complete2Tournament(*g, *tour);
+		
+		return tour;
+	}
+
+	template<
+		typename element_type,
 		typename rank_type,
 		typename perm_type
 	>
@@ -167,6 +218,20 @@ namespace klib{
 		typename element_type,
 		typename rank_type
 	>
+	Permutation<element_type, rank_type> * locally_kemenysation(IGraph &tour, Permutation<element_type, rank_type> &pi, Permutation<element_type, int>& table){
+		
+		int * vertex_ids_perm = permutation_to_vertex_perm(pi, table);
+
+		DVhamiltonPathForTournament(tour, vertex_ids_perm);
+
+		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), table);
+
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
 	Permutation<element_type, rank_type> * kFAS_pivot(IGraph &tour, element_type first, bool kemenyzation = false){
 		
 		int * vertex_ids_perm = feedback_arc_set_pivot(tour);
@@ -182,15 +247,44 @@ namespace klib{
 		typename element_type,
 		typename rank_type
 	>
+	Permutation<element_type, rank_type> * kFAS_pivot(IGraph &tour, Permutation<element_type, int>& table, bool kemenyzation = false){
+		
+		int * vertex_ids_perm = feedback_arc_set_pivot(tour);
+
+		if(kemenyzation){
+			DVhamiltonPathForTournament(tour, vertex_ids_perm);
+		}
+			
+		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), table);
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
 	Permutation<element_type, rank_type> * FHP_greedy(IGraph &tour, element_type first, bool kemenyzation = false){
 		
 		int * vertex_ids_perm = hamiltonPathForTournament(tour);
-		print_array(vertex_ids_perm, tour.numVertices());
 		if(kemenyzation){
 			DVhamiltonPathForTournament(tour, vertex_ids_perm);
 		}
 			
 		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), first);
+
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	Permutation<element_type, rank_type> * FHP_greedy(IGraph &tour, Permutation<element_type, int>& table, bool kemenyzation = false){
+		
+		int * vertex_ids_perm = hamiltonPathForTournament(tour);
+		if(kemenyzation){
+			DVhamiltonPathForTournament(tour, vertex_ids_perm);
+		}
+			
+		return vertex_perm_to_permutation(vertex_ids_perm, tour.numVertices(), table);
 
 	}
 
@@ -248,6 +342,38 @@ namespace klib{
 		typename rank_type
 	>
 	pair<double, Permutation<element_type, rank_type>* > mixed(IGraph &tournament, vector<Permutation<element_type, rank_type> *> &perms, element_type first){
+		
+		typedef pair<double, Permutation<element_type, rank_type> *> result;
+
+		const int k = perms.size();
+		std::vector<result> results;
+
+		Permutation<element_type, rank_type> * pal = pick_a_list<element_type, rank_type>(perms);
+		results.push_back(make_pair(_kemeny_rule<element_type, rank_type>(*pal, perms), pal));
+
+		Permutation<element_type, rank_type> * kemenized = locally_kemenysation(tournament, *pal, first);
+		results.push_back(make_pair(_kemeny_rule<element_type, rank_type>(*kemenized, perms), kemenized));
+		
+		Permutation<element_type, rank_type> * fas_pivot = kFAS_pivot<element_type, rank_type>(tournament, first);
+		results.push_back(make_pair(_kemeny_rule<element_type, rank_type>(*fas_pivot, perms), fas_pivot));
+
+		Permutation<element_type, rank_type> * fas_pivot_kemenized = kFAS_pivot<element_type, rank_type>( tournament, first, true);
+		results.push_back(make_pair(_kemeny_rule<element_type, rank_type>(*fas_pivot_kemenized, perms), fas_pivot_kemenized));
+
+		Permutation<element_type, rank_type> * fhp_greedy = FHP_greedy<element_type, rank_type>(tournament, first);
+		results.push_back(make_pair(_kemeny_rule<element_type, rank_type>(*fhp_greedy, perms), fhp_greedy));
+
+		Permutation<element_type, rank_type> * fhp_greedy_kemenized = FHP_greedy<element_type, rank_type>( tournament, first, true);
+		results.push_back(make_pair(_kemeny_rule<element_type, rank_type>(*fhp_greedy_kemenized, perms), fhp_greedy_kemenized));
+
+		return *min_element(results.begin(), results.end());
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	pair<double, Permutation<element_type, rank_type>* > mixed(IGraph &tournament, vector<Permutation<element_type, rank_type> *> &perms, Permutation<element_type, int> &first){
 		
 		typedef pair<double, Permutation<element_type, rank_type> *> result;
 

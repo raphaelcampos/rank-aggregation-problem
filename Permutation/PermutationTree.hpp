@@ -94,6 +94,21 @@ class PermutationTree : public Permutation<element_type, rank_type>{
             }
         }
 
+        /**
+         * O(log n)
+         * @param  e element in the list
+         * @return element's rank in the list
+         */
+        element_type operator[](rank_type r){
+            for (it = perm.begin(); it != perm.end(); ++it)
+            {
+                if(it->second == r)
+                    return it->first;
+            }
+
+            return -1;
+        }
+
         void print(){
             cout << "{" ;
             int i = 0;

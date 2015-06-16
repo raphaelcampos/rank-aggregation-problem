@@ -61,7 +61,9 @@ int main(int argc, char const *argv[])
 			
 			sigma->print(); cout << endl<< endl;
 
-			IGraph * tournament = create_majority_graph(perms, k, m, sigma->size(), 'A');
+			IGraph * tournament = create_majority_graph(perms, k, m, sigma->size(), *sigma);
+			((Graph_Adj_Matrix*)tournament)->printAsMatrix();
+			cout << endl;
 
 			stringstream filename;
 			

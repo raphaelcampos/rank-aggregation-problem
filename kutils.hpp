@@ -1,7 +1,10 @@
 #ifndef __I_K_UTILS__
 #define __I_K_UTILS__
 
+#include <fstream>
+
 #include "kstructure.h"
+#include "utils.h"
 
 namespace klib{
 	template<
@@ -43,6 +46,62 @@ namespace klib{
 		}
 	}
 
+
+	template<
+		typename element_type,
+		typename rank_type,
+		typename perm_imp_type
+	>
+	pair<std::vector<Permutation<element_type, rank_type>* >, std::map<string, int> >  load_format_trec(string qresult){
+		std::string line;
+		std::map<string, int> map_queries;
+		std::vector<Permutation<element_type, rank_type>* > rankings;
+		
+		ifstream infile;
+    	infile.open(qresult.c_str());
+
+    	while(infile.good() && std::getline( infile, line )){
+    		std::vector<std::string> strs = split(line, ' ');
+
+    		element_type elem = atoi(&(strs[2]).c_str()[0]);
+    		rank_type pos = atoi(&(strs[3]).c_str()[0]);
+
+    		std::map<string, int>::iterator it = map_queries.find(strs[0]);
+            if(it != map_queries.end()){
+                rankings[it->second]->addElement(elem, pos);
+            }else{
+            	Permutation<element_type, rank_type>* p = new perm_imp_type();
+    			p->addElement(elem, pos);
+    			rankings.push_back(p);
+    			map_queries[strs[0]] = map_queries.size() - 1;
+            }
+    	}
+
+    	infile.close();
+    	return make_pair(rankings, map_queries);
+	}
+
+	template<
+		typename element_type,
+		typename rank_type
+	>
+	void save_format_trec(string qresult, pair< std::vector<Permutation<element_type, rank_type>* >, std::map<string, int> > &results){
+		
+		ofstream outfile;
+    	outfile.open(qresult.c_str());
+
+    	for (std::map<string, int>::iterator m = results.second.begin(); m != results.second.end(); ++m)
+    	{
+    		int i = m->second;
+    		for (typename Permutation<element_type, rank_type>::iterator it = results.first[i]->begin(); it != results.first[i]->end(); ++it)
+    		{
+    			outfile << m->first << " 0 " << it->first << " " << it->second << " " << results.first[i]->size()-it->second << " STANDARD" << endl;
+    		}
+     	}
+
+    	outfile.close();
+	}
+
 	template<
 		typename element_type
 	>
@@ -60,12 +119,41 @@ namespace klib{
 	template<
 		typename element_type
 	>
+	int * permutation_to_vertex_perm(Permutation<element_type, int> &p, Permutation<element_type, int> &table){
+		int * perm = new int[p.size()];
+
+		for (typename Permutation<element_type, int>::iterator it = p.begin(); it != p.end(); ++it)
+		{
+			perm[it->second - 1] = table(it->first) - 1;
+		}
+
+		return perm;
+	}
+
+	template<
+		typename element_type
+	>
 	Permutation<element_type, int>  * vertex_perm_to_permutation(int * vertex_ids, int n, element_type first){
 		Permutation<element_type, int> * perm = new PermutationTree<element_type, int>;
 
 		for (int i = 0 ;  i < n; i++)
 		{
 			perm->addElement(vertex_ids[i] + first, i + 1);
+		}
+
+		return perm;
+	}
+
+	template<
+		typename element_type
+	>
+	Permutation<element_type, int>  * vertex_perm_to_permutation(int * vertex_ids, int n, Permutation<element_type, int> &table){
+		Permutation<element_type, int> * perm = new PermutationTree<element_type, int>;
+
+		for (int i = 0 ;  i < n; i++)
+		{
+			element_type elem =  table[vertex_ids[i]+1];
+			perm->addElement(elem, i + 1);
 		}
 
 		return perm;

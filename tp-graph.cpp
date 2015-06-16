@@ -120,14 +120,24 @@ void metrics(int argc, char const *argv[]){
 int main(int argc, char const *argv[])
 {
 
+	std::srand(time(NULL));
+
 	Social_Graph_Adj_Matrix *graphA = load_from_file(argv[1]);
 	Social_Graph_Adj_Matrix *graphB = load_from_file(argv[3]);
 	
-	int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
+	//int ids[] = {5,7,10,13,18,20,23,35,37,45,49,53,59,67,79,82,90,92,96,99};
+	std::vector<int> ids;
+	for (int i = 0; i < 100; ++i)
+	{
+		ids.push_back(i);
+	}
 	for (int i = 0; i < 20; ++i)
 	{
-		graphA->putVertexInA(*graphA->getVertex(ids[i]));
-		graphB->putVertexInA(*graphB->getVertex(ids[i]));
+		int j = std::rand()%(ids.size());
+		graphA->putVertexInA(*graphA->getVertex(ids[j]));
+		graphB->putVertexInA(*graphB->getVertex(ids[j]));
+
+		ids.erase(ids.begin() + j);
 	}
 
 	graphA->loadSybils(argv[2]);

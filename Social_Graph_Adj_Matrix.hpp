@@ -462,7 +462,6 @@ std::vector<double> Social_Graph_Adj_Matrix::printMetrics(){
  */
 double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
     double sum = 0;
-    int total = 0;
     for (set<int>::iterator i = V.begin(); i != V.end(); ++i)
     {
         int numEdges = 0;
@@ -477,7 +476,7 @@ double Social_Graph_Adj_Matrix::clusteringCoefficient(const set<int> &V){
                 if(edgeExists(*j, *k) && edgeExists(*k, *i)) numEdges++;
             }
         }
-        total += inGroup[*i];
+        if(inGroup[*i] <= 1) continue;
         coef = 2.0*numEdges/(double)(inGroup[*i]*(inGroup[*i]-1));
         sum += coef;
     }
@@ -584,48 +583,47 @@ double Social_Graph_Adj_Matrix::mixingTimeOpt(double epsilon){
 
 
     int t = 1;
-    int ts = 6;
-    int tc = 10;
-    matrix<double> Pt = P;
-    matrix<double> Pts = P;
-    matrix<double> cum = P;
-    matrix<double> quad = P;
-    while(tc != 2){
+    int t_2steps = 0;
+    matrix<double> Pt, Pt_before, P0, Psqr;
+    Pt = Pt_before = P0 = Psqr = P;
+    while(t_2steps != 1){
         
         double maxi = 10;
-        tc = 1;
- 
+        t_2steps = 1;
+        Psqr = P;
+        Pt_before = Pt;
+        Pt = P0 * Psqr;
+        double max_dist = 0;
+        for (int i = 0; i < n; ++i)
+        {
+            double dist = sum(abs(rowm(Pt, i) - ds))/2;
+            delta(0, i) = dist;
+            
+            if(delta(0, i) > max_dist){
+                max_dist = delta(0, i);
+            }
+        }
+        maxi = max_dist;
         while(maxi > epsilon){
-            Pts = Pt;
-            Pt = cum * quad;
+            Psqr = Psqr * Psqr;
+            t_2steps*=2;
+            Pt_before = Pt;
+            Pt = P0 * Psqr;
             double max_dist = 0;
             for (int i = 0; i < n; ++i)
             {
                 double dist = sum(abs(rowm(Pt, i) - ds))/2;
                 delta(0, i) = dist;
-                iD(0, i) = ts;
                 
                 if(delta(0, i) > max_dist){
                     max_dist = delta(0, i);
                 }
             }
             maxi = max_dist;
-            
-            
-            quad = quad * quad;
-            ts=tc;
-
-            //cout << maxi << " : " << tc << endl;
-            tc*=2;
-
         }
         delta = ones_matrix<double>(1, n); 
-        
-        t += (tc/4.0);
-        cum = Pts;
-        quad = P;
-
-        //cout << t << endl;
+        t += (t_2steps/2);
+        P0 = Pt_before;
     }
     return t;
 
