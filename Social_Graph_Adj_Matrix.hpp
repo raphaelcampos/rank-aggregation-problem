@@ -559,28 +559,25 @@ double Social_Graph_Adj_Matrix::mixingTime(double epsilon){
 }
 
 double Social_Graph_Adj_Matrix::mixingTimeOpt(double epsilon){
-    typedef std::map<unsigned long, double> sample;
     int n = this->numVertices();
     matrix<double> P = zeros_matrix<double>(n,n);
     matrix<double> ds(1, n);
-    matrix<double> iD(1, n);
     matrix<double> delta = ones_matrix<double>(1, n);
-    bool *seen = new bool[n];
     
-    for (IGraph::vertex_iterator u = this->begin(); u != this->end(); ++u)
+    for (int i = 0; i < n; ++i)
     {
-
+        IGraph::vertex * u = &vertices[i];
         ds(0, u->id) = u->outdegree/((double)numEdges());
-        iD(0, u->id) = 1.0/n;
-        seen[u->id] = false;
-        sample samp;
-        for (IGraph::vertex::iterator e = u->begin(); e != u->end(); ++e)
+        for (int j = 0; j < n; ++j)
         {
-            IGraph::vertex * v = e->second;
-            P(u->id, v->id) = 1.0/(u->outdegree);
+            IGraph::vertex * v = vertices[i].adj[j].second;
+            if(v != NULL){
+                P(u->id, v->id) = 1.0/(u->outdegree);
+                cout << u->id << " " << v->id << endl;
+            }
         }
     }
-
+    cout << rowm(P,n-1) << endl;
 
     int t = 1;
     int t_2steps = 0;
