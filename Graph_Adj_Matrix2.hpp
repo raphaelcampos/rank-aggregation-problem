@@ -153,7 +153,7 @@ class Graph_Adj_Matrix : public IGraph {
                 vector< Graph_Adj_Matrix::vertex >::iterator ptr_;
         };
 
-    protected:
+    private:
         vector< Graph_Adj_Matrix::vertex > vertices;
         int n;
         int m;
