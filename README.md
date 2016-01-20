@@ -1,6 +1,6 @@
 # Rank Aggregation Problem
 
-This code was developed as part of the course ***Design and Analysis of Algorithms*** of the graduate program of Federal University of Minas Gerais.
+This code was developed as part of the course ***Design and Analysis of Algorithms*** of the Graduate Program in Computer Science of the Federal University of Minas Gerais.
 
 ## The work
 
